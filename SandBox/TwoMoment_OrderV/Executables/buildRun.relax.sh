@@ -12,12 +12,12 @@ function load_set_common(){
    
    #module load oneapi/eng-compiler/2022.01.30.005
    #module load oneapi/eng-compiler/2022.06.30.002
-   module load oneapi/eng-compiler/2022.10.15.006
+   module restore 
    export OP_LEVEL=O3
-   export LOG_FILE=relax.${OP_LEVEL}
+   export LOG_FILE=relax.${OP_LEVEL}.10.15.006
    rm $LOG_FILE
    export APP_NAME=ApplicationDriver_Neutrinos
-   export EXASTAR_HOME=/localdisk/quanshao
+   export EXASTAR_HOME=/home/shaopingquan
    export HDF5_INC=${EXASTAR_HOME}/ExaStar/hdf57/include
    export HDF5_LIB=${EXASTAR_HOME}/ExaStar/hdf57/lib64
    export THORNADO_DIR=${EXASTAR_HOME}/ExaStar/thornado-lab
@@ -49,7 +49,7 @@ function buildApp(){
 
 function runApp(){
 
-   module load iprof
+   #module load iprof
 
    export LTTNG_HOME=$EXASTAR_HOME
    mkdir -p $LTTNG_HOME

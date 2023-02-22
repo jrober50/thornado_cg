@@ -54,5 +54,6 @@ LIBRARIES_MAGMA    =
 LIBRARIES_PETSC    =
 LIBRARIES_POSEIDON =
 LIBRARIES_ROCM     =
-LIBRARIES_ONEMKL   = -qmkl
+LIBRARIES_ONEMKL   = -qmkl -lmkl_sycl
+#-lmkl_sycl -lsycl -lOpenCL
 #-lsycl

@@ -19,7 +19,7 @@ function load_set_common(){
    module switch -f intel_compute_runtime/release/pvc-prq-66 neo/agama-devel-sp3/553-22.49.25018.21-i550
 
    export OP_LEVEL=O3
-   export LOG_FILE=sineWave.${OP_LEVEL}.2023.02.08.offload2funcs
+   export LOG_FILE=sineWave.${OP_LEVEL}.2023.02.08.xN32.2tiles
    #export LOG_FILE=sineWave.${OP_LEVEL}.2023.02.08.devel553.icl.mcq.ccs
 #   export LOG_FILE=sineWave.${OP_LEVEL}.2023.02.08.icl.devel553
    rm $LOG_FILE
@@ -30,8 +30,8 @@ function load_set_common(){
 
    export APP_NAME=ApplicationDriver
    export EXASTAR_HOME=/localdisk/quanshao
-   export HDF5_INC=${EXASTAR_HOME}/ExaStar/hdf57/include
-   export HDF5_LIB=${EXASTAR_HOME}/ExaStar/hdf57/lib64
+   export HDF5_INC=${EXASTAR_HOME}/ExaStar/hdf5.12/include
+   export HDF5_LIB=${EXASTAR_HOME}/ExaStar/hdf5.12/lib64
    export THORNADO_DIR=${EXASTAR_HOME}/ExaStar/thornado-dev
    export WEAKLIB_DIR=${EXASTAR_HOME}/ExaStar/weaklib
    export WEAKLIB_TABLES_DIR=${EXASTAR_HOME}/ExaStar/weaklib-tables
@@ -72,7 +72,7 @@ function runApp(){
    ##export LIBOMPTARGET_PLUGIN=OPENCL
    export LIBOMPTARGET_DEBUG=0
    export EnableImplicitScaling=1
-   export ZE_AFFINITY_MASK=0.0
+   export ZE_AFFINITY_MASK=0
    #export LIBOMPTARGET_PLUGIN_PROFILE=T
    #export OMP_TARGET_OFFLOAD=DISABLED
    export OMP_TARGET_OFFLOAD=MANDATORY
@@ -100,8 +100,8 @@ function runApp(){
    echo "ZEX_NUMBER_OF_CCS="${ZEX_NUMBER_OF_CCS} |& tee -a $LOG_FILE
 
 
-   #( time ./${APP_NAME}_${THORNADO_MACHINE} ) |& tee -a $LOG_FILE
-   ( time iprof -l ./${APP_NAME}_${THORNADO_MACHINE} ) |& tee -a $LOG_FILE
+   ( time ./${APP_NAME}_${THORNADO_MACHINE} ) |& tee -a $LOG_FILE
+   #( time iprof -l ./${APP_NAME}_${THORNADO_MACHINE} ) |& tee -a $LOG_FILE
    #(time /nfs/pdx/home/mheckel/pti-gpu/tools/bin/onetrace -h -d --chrome-call-logging --chrome-device-timeline ./${APP_NAME}_${THORNADO_MACHINE} ) |& tee -a $LOG_FILE
    #(vtune -collect gpu-hotspots -knob target-gpu=0:58:0.0 -data-limit=0 -r $VT_OUTPUT ./${APP_NAME}_${THORNADO_MACHINE}) |& tee -a $LOG_FILE
    #( time  gdb-oneapi ./${APP_NAME}_${THORNADO_MACHINE}) |& tee $LOG_FILE

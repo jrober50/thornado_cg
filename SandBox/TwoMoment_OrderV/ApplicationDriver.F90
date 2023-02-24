@@ -80,7 +80,9 @@ PROGRAM ApplicationDriver
 
       ! --- Minerbo Closure Only ---
 
-      nX  = [ 8, 8, 8 ]
+      !nX  = [ 8, 8, 8 ]
+      !nX  = [ 16, 16, 16 ]
+      nX  = [ 32, 32, 32 ]
       xL  = [ 0.0_DP, 0.0_DP, 0.0_DP ]
       xR  = [ 1.0_DP, 1.0_DP, 1.0_DP ]
       bcX = [ 1, 1, 1 ]
@@ -97,7 +99,8 @@ PROGRAM ApplicationDriver
 
       t_end   = 1.0d-0
       iCycleD = 1
-      iCycleW = 100
+!!      iCycleW = 100
+      iCycleW = 1000
 !!      iCycleW = 1
       maxCycles = 10000
 

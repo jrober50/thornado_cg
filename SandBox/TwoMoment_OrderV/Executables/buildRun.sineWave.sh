@@ -10,18 +10,20 @@ function load_set_common(){
 
    module purge
    
-   #module load oneapi/eng-compiler/2022.01.30.005
-#   module load oneapi/eng-compiler/2022.06.30.002
 
-#   module load oneapi/eng-compiler/2022.12.30.002
-   module load nightly-compiler/2023.02.08
-#   module switch -f intel_compute_runtime/release/agama-devel-524 neo/agama-devel-sp3/553-22.49.25018.21-i550
-   module switch -f intel_compute_runtime/release/pvc-prq-66 neo/agama-devel-sp3/553-22.49.25018.21-i550
+#   export COMPILER_DATE="2022.12.30.003"
+   export COMPILER_DATE="2023.03.09"
+   module load nightly-compiler/${COMPILER_DATE}
+#   module load oneapi/eng-compiler/${COMPILER_DATE}
+
+
+   #module switch -f intel_compute_runtime/release/pvc-prq-66 neo/agama-devel-sp3/553-22.49.25018.21-i550
+   module switch -f mpi/aurora_mpich/icc-sockets/51.2 mpi/aurora_mpich/icc-sockets/49.1
+#   module switch -f neo/agama-devel-sp3/584-23.05.25593.11
 
    export OP_LEVEL=O3
-   export LOG_FILE=sineWave.${OP_LEVEL}.2023.02.08.xN8.10tsteps
-   #export LOG_FILE=sineWave.${OP_LEVEL}.2023.02.08.devel553.icl.mcq.ccs
-#   export LOG_FILE=sineWave.${OP_LEVEL}.2023.02.08.icl.devel553
+   export LOG_FILE=sineWave.${OP_LEVEL}.${COMPILER_DATE}.xN16.02kM.2tiles
+
    rm $LOG_FILE
    
    #export LIBOMPTARGET_LEVEL_ZERO_USE_IMMEDIATE_COMMAND_LIST=1
@@ -29,12 +31,12 @@ function load_set_common(){
    #export ZEX_NUMBER_OF_CCS=0:4
 
    export APP_NAME=ApplicationDriver
-   export EXASTAR_HOME=/localdisk/quanshao
-   export HDF5_INC=${EXASTAR_HOME}/ExaStar/hdf5.12/include
-   export HDF5_LIB=${EXASTAR_HOME}/ExaStar/hdf5.12/lib64
-   export THORNADO_DIR=${EXASTAR_HOME}/ExaStar/thornado-dev
-   export WEAKLIB_DIR=${EXASTAR_HOME}/ExaStar/weaklib
-   export WEAKLIB_TABLES_DIR=${EXASTAR_HOME}/ExaStar/weaklib-tables
+   export EXASTAR_HOME=/localdisk/quanshao/ExaStar
+   export HDF5_INC=${EXASTAR_HOME}/hdf57/include
+   export HDF5_LIB=${EXASTAR_HOME}/hdf57/lib64
+   export THORNADO_DIR=${EXASTAR_HOME}/thornado-dev
+   export WEAKLIB_DIR=${EXASTAR_HOME}/weaklib
+   export WEAKLIB_TABLES_DIR=${EXASTAR_HOME}/weaklib-tables
    export THORNADO_MACHINE=beacon_intel
    export MPIR_CVAR_ENABLE_GPU=0
    export IGC_OverrideOCLMaxParamSize=4096
@@ -72,7 +74,7 @@ function runApp(){
    ##export LIBOMPTARGET_PLUGIN=OPENCL
    export LIBOMPTARGET_DEBUG=0
    export EnableImplicitScaling=1
-   export ZE_AFFINITY_MASK=0.0
+   export ZE_AFFINITY_MASK=0
    #export LIBOMPTARGET_PLUGIN_PROFILE=T
    #export OMP_TARGET_OFFLOAD=DISABLED
    export OMP_TARGET_OFFLOAD=MANDATORY
@@ -82,7 +84,7 @@ function runApp(){
    ulimit -s unlimited
    #ulimit -n 20480
    ## The following seems working well for the SineWaveStream app.
-   export LIBOMPTARGET_LEVEL0_MEMORY_POOL=device,16,32
+   export LIBOMPTARGET_LEVEL0_MEMORY_POOL=device,128,64,16384
    module list |& tee -a $LOG_FILE
 
 # For vtune
@@ -100,8 +102,9 @@ function runApp(){
    echo "ZEX_NUMBER_OF_CCS="${ZEX_NUMBER_OF_CCS} |& tee -a $LOG_FILE
 
 
-   #( time ./${APP_NAME}_${THORNADO_MACHINE} ) |& tee -a $LOG_FILE
-   ( time iprof -l ./${APP_NAME}_${THORNADO_MACHINE} ) |& tee -a $LOG_FILE
+   ( time ./${APP_NAME}_${THORNADO_MACHINE} ) |& tee -a $LOG_FILE
+   #( time iprof ./${APP_NAME}_${THORNADO_MACHINE} ) |& tee -a $LOG_FILE
+   #( time iprof -l ./${APP_NAME}_${THORNADO_MACHINE} ) |& tee -a $LOG_FILE
    #(time /nfs/pdx/home/mheckel/pti-gpu/tools/bin/onetrace -h -d --chrome-call-logging --chrome-device-timeline ./${APP_NAME}_${THORNADO_MACHINE} ) |& tee -a $LOG_FILE
    #(vtune -collect gpu-hotspots -knob target-gpu=0:58:0.0 -data-limit=0 -r $VT_OUTPUT ./${APP_NAME}_${THORNADO_MACHINE}) |& tee -a $LOG_FILE
    #( time  gdb-oneapi ./${APP_NAME}_${THORNADO_MACHINE}) |& tee $LOG_FILE
@@ -112,6 +115,7 @@ function runApp(){
     #(vtune -collect gpu-hotspots -knob target-gpu=0:154:0.0 -r $VT_OUTPUT ./${APP_NAME}_${THORNADO_MACHINE}) |& tee -a $LOG_FILE
 
     #vtune-backend --allow-remote-access --enable-server-profiling --reset-passphrase --web-port 8080 --data-directory=${VT_OUTPUT}
+    echo "Log file:" $LOG_FILE "writting finished"
 }
 
 ###########################################################################################

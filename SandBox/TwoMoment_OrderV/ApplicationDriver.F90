@@ -99,10 +99,11 @@ PROGRAM ApplicationDriver
 
       t_end   = 1.0d-0
       iCycleD = 1
-!!      iCycleW = 100
-      iCycleW = 1000
+      iCycleW = 100
+!!      iCycleW = 1000
 !!      iCycleW = 1
-      maxCycles = 10
+!!      maxCycles = 1
+      maxCycles = 1000
 
       V_0 = [ 0.1_DP, 0.0_DP, 0.0_DP ]
 

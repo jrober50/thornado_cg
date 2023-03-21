@@ -2,7 +2,7 @@ MODULE TwoMoment_UtilitiesModule_OrderV
 
   USE KindModule, ONLY: &
     DP, Zero, Half, One, Two, Three, Five, &
-    SqrtTiny, Fifth, Third
+    SqrtTiny
   USE QuadratureModule, ONLY: &
     GetQuadrature
   USE ProgramHeaderModule, ONLY: &
@@ -2066,11 +2066,8 @@ CONTAINS
 
     a = Half * ( One - EF )
     b = Half * ( Three * EF - One )
-!!Shaoping Modified the code. A=[1,2,3.0,4.0] seems not working for offload
-!!    h_u = [ I_u_1, I_u_2, I_u_3 ] / ( FF * D )
-    h_u(1) =  I_u_1 / ( FF * D )
-    h_u(2) =  I_u_2 / ( FF * D )
-    h_u(3) =  I_u_3 / ( FF * D )
+
+    h_u = [ I_u_1, I_u_2, I_u_3 ] / ( FF * D )
 
     Gm_uu      = Zero
     Gm_uu(1,1) = One / Gm_dd_11
@@ -2149,54 +2146,10 @@ CONTAINS
     INTEGER  :: i, j
     REAL(DP) :: FF, EF, a, b
     REAL(DP) :: h_d(3), Gm_dd(3,3)
-    REAL(DP) :: valueClosure, tmp1
 
-
-!! Shaoping inline the following function. Run hangs if not inlined
-!! Shaoping Tried "!DIR$ ATTRIBUTES FORCEINLINE", did not help, Ran hangs. 04-07-2022
-!!    FF = FluxFactor( D, I_u_1, I_u_2, I_u_3, Gm_dd_11, Gm_dd_22, Gm_dd_33 )
-      FF = MIN( MAX( SQRT( Gm_dd_11 * I_u_1**2 &
-                         + Gm_dd_22 * I_u_2**2 &
-                         + Gm_dd_33 * I_u_3**2 )/MAX( D, SqrtTiny ),  SqrtTiny ), One )
+    FF = FluxFactor( D, I_u_1, I_u_2, I_u_3, Gm_dd_11, Gm_dd_22, Gm_dd_33 )
                       
-!! Shaoping function inline ENDs                      
-
-!! Shaoping inline the following function.  Run hangs if not inlined 
-!!    EF = EddingtonFactor( D, FF )
-
-#ifdef THORNADO_DEBUG
-    IF( IEEE_IS_NAN(D) ) STOP 'NAN in D when call EddingtonFactor_Scalar'
-#endif
-
-#ifdef MOMENT_CLOSURE_MINERBO
-    ! --- Maximum Entropy (ME) Minerbo Closure ---
-    valueClosure = Three * Fifth * FF**2 * ( One - Third * FF + FF**2 )
-    EF = Third + Two * Third * valueClosure !!ClosurePolynomial_ME_CB( FF )
-#elif  MOMENT_CLOSURE_MAXIMUM_ENTROPY_CB
-    ! --- Cernohorsky-Bludman ME Closure ---
-    tmp1 = FF / MAX( One - D, SqrtTiny)
-    valueClosure = Three * Fifth * tmp1**2 * ( One - Third * tmp1 + tmp1**2 ) 
-    EF = Third + Two * Third * ( One - D ) * ( One - Two * D ) * valueClosure !! &
-!!          * ClosurePolynomial_ME_CB( FF / MAX( One - D, SqrtTiny ) )
-#elif  MOMENT_CLOSURE_MAXIMUM_ENTROPY_BL
-    ! --- Banach-Larecki ME Closure ---
-    tmp1 = FF / MAX( One - D, SqrtTiny)
-    valueClosure = ( 9.0_DP * tmp1**2 - 5.0_DP &
-          + SQRT( 33.0_DP * tmp1**4 - 42.0_DP * tmp1**2 + 25.0_DP ) ) / 8.0_DP
-    EF = Third + Two * Third * ( One - D ) * ( One - Two * D ) * valueClosure !!&
-!!          * ClosurePolynomial_ME_BL( FF / MAX( One - D, SqrtTiny ) )
-#elif  MOMENT_CLOSURE_KERSHAW_BL
-    ! --- Banach-Larecki Kershaw Closure ---
-    tmp1 = FF / MAX( One - D, SqrtTiny)
-    valueClosure = tmp1**2
-    EF = Third + Two * Third * ( One - D ) * ( One - Two * D ) *valueClosure !!&
-!!          * ClosurePolynomial_KE_BL( FF / MAX( One - D, SqrtTiny ) )
-#elif  MOMENT_CLOSURE_LEVERMORE
-    ! --- Levermore Closure ---
-      EF = Third * ( 5.0_dp - Two * SQRT( Four - Three * FF * FF ) )
-#endif
-
-!!Shaoping function inline ENDs
+    EF = EddingtonFactor( D, FF )
 
     a = Half * ( One - EF )
     b = Half * ( Three * EF - One )
@@ -2291,11 +2244,7 @@ CONTAINS
     a = Half * ( FF - HF )
     b = Half * ( Five * HF - Three * FF )
 
-!!Shaoping  Modified the code. A=[1,2,3.0,4.0] seems not working for offload.
-!!    h_u = [ I_u_1, I_u_2, I_u_3 ] / ( FF * D )
-    h_u(1) = I_u_1 / ( FF * D )
-    h_u(2) = I_u_2 / ( FF * D )
-    h_u(3) = I_u_3 / ( FF * D )
+    h_u = [ I_u_1, I_u_2, I_u_3 ] / ( FF * D )
 
     Gm_uu      = Zero
     Gm_uu(1,1) = One / Gm_dd_11

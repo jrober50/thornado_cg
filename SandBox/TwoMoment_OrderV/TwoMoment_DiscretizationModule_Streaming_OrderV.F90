@@ -2990,7 +2990,6 @@ CONTAINS
 
     CALL TimersStart( Timer_Streaming_Eigenvalues )
 
-!!! Shaoping Modified the code. A=[1,2,3.0,4.0] seems not working for offload.    
 #if   defined( THORNADO_OMP_OL )
     !$OMP TARGET TEAMS DISTRIBUTE PARALLEL DO SIMD COLLAPSE(4) &
     !$OMP PRIVATE( A, Lambda )
@@ -3010,31 +3009,21 @@ CONTAINS
 
         ! --- Quadratic Form Matrix ---
         
-        A(1,1) =          dV_u_dX1(iNodeX,1,iZ2,iZ3,iZ4)
-        A(2,1) = Half * ( dV_u_dX2(iNodeX,1,iZ2,iZ3,iZ4) + dV_u_dX1(iNodeX,2,iZ2,iZ3,iZ4) )
-        A(3,1) = Half * ( dV_u_dX3(iNodeX,1,iZ2,iZ3,iZ4) + dV_u_dX1(iNodeX,3,iZ2,iZ3,iZ4) )
-        A(1,2) = Half * ( dV_u_dX1(iNodeX,2,iZ2,iZ3,iZ4) + dV_u_dX2(iNodeX,1,iZ2,iZ3,iZ4) )
-        A(2,2) =          dV_u_dX2(iNodeX,2,iZ2,iZ3,iZ4)
-        A(3,2) = Half * ( dV_u_dX3(iNodeX,2,iZ2,iZ3,iZ4) + dV_u_dX2(iNodeX,3,iZ2,iZ3,iZ4) )
-        A(1,3) = Half * ( dV_u_dX1(iNodeX,3,iZ2,iZ3,iZ4) + dV_u_dX3(iNodeX,1,iZ2,iZ3,iZ4) )
-        A(2,3) = Half * ( dV_u_dX2(iNodeX,3,iZ2,iZ3,iZ4) + dV_u_dX3(iNodeX,2,iZ2,iZ3,iZ4) )
-        A(3,3) =          dV_u_dX3(iNodeX,3,iZ2,iZ3,iZ4)
-
-!!        A(:,1) = Half * [ Two * dV_u_dX1(iNodeX,1,iZ2,iZ3,iZ4), &
-!!                                dV_u_dX2(iNodeX,1,iZ2,iZ3,iZ4)  &
-!!                              + dV_u_dX1(iNodeX,2,iZ2,iZ3,iZ4), &
-!!                                dV_u_dX3(iNodeX,1,iZ2,iZ3,iZ4)  &
-!!                              + dV_u_dX1(iNodeX,3,iZ2,iZ3,iZ4) ]
-!!        A(:,2) = Half * [       dV_u_dX1(iNodeX,2,iZ2,iZ3,iZ4)  &
-!!                              + dV_u_dX2(iNodeX,1,iZ2,iZ3,iZ4), &
-!!                          Two * dV_u_dX2(iNodeX,2,iZ2,iZ3,iZ4), &
-!!                                dV_u_dX3(iNodeX,2,iZ2,iZ3,iZ4)  &
-!!                              + dV_u_dX2(iNodeX,3,iZ2,iZ3,iZ4) ]
-!!        A(:,3) = Half * [       dV_u_dX1(iNodeX,3,iZ2,iZ3,iZ4)  &
-!!                              + dV_u_dX3(iNodeX,1,iZ2,iZ3,iZ4), &
-!!                                dV_u_dX2(iNodeX,3,iZ2,iZ3,iZ4)  &
-!!                              + dV_u_dX3(iNodeX,2,iZ2,iZ3,iZ4), &
-!!                          Two * dV_u_dX3(iNodeX,3,iZ2,iZ3,iZ4) ]
+        A(:,1) = Half * [ Two * dV_u_dX1(iNodeX,1,iZ2,iZ3,iZ4), &
+                                dV_u_dX2(iNodeX,1,iZ2,iZ3,iZ4)  &
+                              + dV_u_dX1(iNodeX,2,iZ2,iZ3,iZ4), &
+                                dV_u_dX3(iNodeX,1,iZ2,iZ3,iZ4)  &
+                              + dV_u_dX1(iNodeX,3,iZ2,iZ3,iZ4) ]
+        A(:,2) = Half * [       dV_u_dX1(iNodeX,2,iZ2,iZ3,iZ4)  &
+                              + dV_u_dX2(iNodeX,1,iZ2,iZ3,iZ4), &
+                          Two * dV_u_dX2(iNodeX,2,iZ2,iZ3,iZ4), &
+                                dV_u_dX3(iNodeX,2,iZ2,iZ3,iZ4)  &
+                              + dV_u_dX2(iNodeX,3,iZ2,iZ3,iZ4) ]
+        A(:,3) = Half * [       dV_u_dX1(iNodeX,3,iZ2,iZ3,iZ4)  &
+                              + dV_u_dX3(iNodeX,1,iZ2,iZ3,iZ4), &
+                                dV_u_dX2(iNodeX,3,iZ2,iZ3,iZ4)  &
+                              + dV_u_dX3(iNodeX,2,iZ2,iZ3,iZ4), &
+                          Two * dV_u_dX3(iNodeX,3,iZ2,iZ3,iZ4) ]
 
         CALL EigenvaluesSymmetric3( A, Lambda )
 
@@ -3128,13 +3117,7 @@ CONTAINS
                   dGm_dd_dX3(iNodeZ_E,1,iZ2,iZ3,iZ4), &
                   dGm_dd_dX3(iNodeZ_E,2,iZ2,iZ3,iZ4), &
                   dGm_dd_dX3(iNodeZ_E,3,iZ2,iZ3,iZ4) )
-!Shaoping  Modified the code. A=[1,2,3.0,4.0] seems not working for offload.
-!!      uPR_L = [ uD_L(iZ_F), uI1_L(iZ_F), uI2_L(iZ_F), uI3_L(iZ_F) ]
-
-      uPR_L(1) = uD_L(iZ_F)
-      uPR_L(2) = uI1_L(iZ_F)
-      uPR_L(3) = uI2_L(iZ_F)
-      uPR_L(4) = uI3_L(iZ_F)
+      uPR_L = [ uD_L(iZ_F), uI1_L(iZ_F), uI2_L(iZ_F), uI3_L(iZ_F) ]
 
       ! --- Right State Flux ---
 
@@ -3161,14 +3144,7 @@ CONTAINS
                   dGm_dd_dX3(iNodeZ_E,2,iZ2,iZ3,iZ4), &
                   dGm_dd_dX3(iNodeZ_E,3,iZ2,iZ3,iZ4) )
 
-!Shaoping  Modified the code. A=[1,2,3.0,4.0] seems not working for offload.
-!!      uPR_R = [ uD_R(iZ_F), uI1_R(iZ_F), uI2_R(iZ_F), uI3_R(iZ_F) ]
-
-      uPR_R(1) = uD_R(iZ_F)
-      uPR_R(2) = uI1_R(iZ_F)
-      uPR_R(3) = uI2_R(iZ_F)
-      uPR_R(4) = uI3_R(iZ_F)
-
+      uPR_R = [ uD_R(iZ_F), uI1_R(iZ_F), uI2_R(iZ_F), uI3_R(iZ_F) ]
 
       ! --- Numerical Flux (Local Lax-Friedrichs) ---
 
@@ -3865,15 +3841,7 @@ CONTAINS
 
       PositionIndexZ_F(iZ_F) = iX_F
 
-!! Shaoping : causing ERROR: Memory allocation error
-!!      IndexTableZ_F(:,iZ_F) = [ iNodeE, iNodeX_X, iZP1, iZP2, iZP3, iS, iZP4 ]
-      IndexTableZ_F(1,iZ_F) =  iNodeE
-      IndexTableZ_F(2,iZ_F) =  iNodeX_X
-      IndexTableZ_F(3,iZ_F) =  iZP1
-      IndexTableZ_F(4,iZ_F) =  iZP2
-      IndexTableZ_F(5,iZ_F) =  iZP3
-      IndexTableZ_F(6,iZ_F) =  iS
-      IndexTableZ_F(7,iZ_F) =  iZP4 
+      IndexTableZ_F(:,iZ_F) = [ iNodeE, iNodeX_X, iZP1, iZP2, iZP3, iS, iZP4 ]
 
     END DO
     END DO
@@ -3919,15 +3887,7 @@ CONTAINS
 
       PositionIndexZ_K(iZ_K) = iX_K
 
-!! Shaoping : causing ERROR: Memory allocation error
-!!      IndexTableZ_K(:,iZ_K) = [ iNodeE, iNodeX, iZP1, iZP2, iZP3, iS, iZP4 ]
-      IndexTableZ_K(1,iZ_K) = iNodeE
-      IndexTableZ_K(2,iZ_K) = iNodeX
-      IndexTableZ_K(3,iZ_K) = iZP1
-      IndexTableZ_K(4,iZ_K) = iZP2
-      IndexTableZ_K(5,iZ_K) = iZP3
-      IndexTableZ_K(6,iZ_K) = iS
-      IndexTableZ_K(7,iZ_K) = iZP4
+      IndexTableZ_K(:,iZ_K) = [ iNodeE, iNodeX, iZP1, iZP2, iZP3, iS, iZP4 ]
 
     END DO
     END DO
@@ -4141,15 +4101,7 @@ CONTAINS
 
       PositionIndexZ_F(iZ_F) = iX_F
 
-!! Shaoping : causing ERROR: Memory allocation error
-!!      IndexTableZ_F(:,iZ_F) = [ 1, iNode_E, iZ2, iZ3, iZ4, iS, iZ1 ]
-      IndexTableZ_F(1,iZ_F) =  1
-      IndexTableZ_F(2,iZ_F) =  iNode_E
-      IndexTableZ_F(3,iZ_F) =  iZ2
-      IndexTableZ_F(4,iZ_F) =  iZ3
-      IndexTableZ_F(5,iZ_F) =  iZ4
-      IndexTableZ_F(6,iZ_F) =  iS
-      IndexTableZ_F(7,iZ_F) =  iZ1 
+      IndexTableZ_F(:,iZ_F) = [ 1, iNode_E, iZ2, iZ3, iZ4, iS, iZ1 ]
 
     END DO
     END DO
@@ -4195,15 +4147,7 @@ CONTAINS
 
       PositionIndexZ_K(iZ_K) = iX_K
 
-!! Shaoping : causing ERROR: Memory allocation error
- !!     IndexTableZ_K(:,iZ_K) = [ iNodeE, iNodeX, iZ2, iZ3, iZ4, iS, iZ1 ]
-      IndexTableZ_K(1,iZ_K) = iNodeE
-      IndexTableZ_K(2,iZ_K) = iNodeX
-      IndexTableZ_K(3,iZ_K) = iZ2
-      IndexTableZ_K(4,iZ_K) = iZ3
-      IndexTableZ_K(5,iZ_K) = iZ4
-      IndexTableZ_K(6,iZ_K) = iS
-      IndexTableZ_K(7,iZ_K) = iZ1
+      IndexTableZ_K(:,iZ_K) = [ iNodeE, iNodeX, iZ2, iZ3, iZ4, iS, iZ1 ]
 
     END DO
     END DO

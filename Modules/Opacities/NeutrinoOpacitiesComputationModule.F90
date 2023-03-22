@@ -131,7 +131,9 @@ MODULE NeutrinoOpacitiesComputationModule
 
 CONTAINS
 
-!!Shaoping: SIMD removed for the loops to do summations. Otherwise the sum may not be right. 
+!!Shaoping: SIMD removed for the loops to do summations. Otherwise the sum may not be right for -O0 level. 
+!! Tested on March 22 2023 with night-compiler/2023.03.10. The issue is still here to stay.
+!! https://jira.devtools.intel.com/browse/XDEPS-6095
 
 
   SUBROUTINE ComputeEquilibriumDistributions_Point( E, D, T, Y, f0, iSpecies )

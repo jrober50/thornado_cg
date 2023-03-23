@@ -398,7 +398,6 @@ CONTAINS
 
 !! Shaoping: Need to use" TARGET ENTER DATA MAP(always" directive,  otherwise the allocatable array will not be mapped/updated correctly.          
 #if defined(THORNADO_OMP_OL)
-!!    !$OMP TARGET UPDATE TO &
     !$OMP TARGET ENTER DATA &
     !$OMP MAP(always, to: D_T, T_T, Y_T, &
     !$OMP   UnitD, UnitT, UnitY, UnitP, UnitE, UnitMe, UnitMp, UnitMn, &

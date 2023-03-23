@@ -149,7 +149,7 @@ CONTAINS
 #if defined(THORNADO_GPU)
     CALL MPI_COMM_RANK( MPI_COMM_WORLD, myrank, ierr )
     CALL MPI_COMM_SIZE( MPI_COMM_WORLD, nranks, ierr )
-!! Shaoping. To avoid cll MPI_FINALIZE twices which leads to "In MPIR_Free_contextid, the context id is not in use (Internal MPI error!)"    
+!! Shaoping. To avoid call MPI_FINALIZE twices which leads to "In MPIR_Free_contextid, the context id is not in use (Internal MPI error!)"    
     ndevices = omp_get_num_devices() 
 #if defined(THORNADO_CUDA)
     ierr = cudaGetDeviceCount( ndevices )

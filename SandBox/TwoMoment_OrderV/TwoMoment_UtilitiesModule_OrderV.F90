@@ -642,7 +642,6 @@ CONTAINS
           DO i = 1, 4
             IF ( ITERATE(iZ) ) THEN
               SUM1 = Zero
-!! Shaoping This produces NaNs with SIMD          !DIR$ VECTOR NOVECREMAINDER              
 !! Mathi: possible values for Mk is 1,2 
               DO iM = 1, Mk
                 SUM1 = SUM1 + GVEC(i,iM,iZ) * Alpha(iM,iZ)

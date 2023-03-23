@@ -3010,7 +3010,6 @@ CONTAINS
     IF ( Mk == M ) THEN
 
 #if   defined( THORNADO_OMP_OL )
-      !!$OMP TARGET TEAMS DISTRIBUTE PARALLEL DO SIMD
       !$OMP TARGET TEAMS DISTRIBUTE 
 #elif defined( THORNADO_OACC   )
       !$ACC PARALLEL LOOP GANG 
@@ -3021,13 +3020,10 @@ CONTAINS
         IF( MASK(iN_X) )THEN
 
 #if   defined( THORNADO_OMP_OL )
-          !$OMP PARALLEL DO SIMD COLLAPSE(2)
+      !$OMP PARALLEL DO SIMD COLLAPSE(2)
 #elif defined( THORNADO_OACC   )
-          !$ACC LOOP VECTOR COLLAPSE(2)
+      !$ACC LOOP VECTOR COLLAPSE(2)
 #endif
-!          DO k  = 1, n_FP*(Mk-1)
-!            iM = k/n_FP
-!            iFP = MOD(k,n_FP)
           DO iM  = 1, Mk-1
           DO iFP = 1, n_FP
             F(iFP,iM,iN_X) = F(iFP,iM+1,iN_X) 

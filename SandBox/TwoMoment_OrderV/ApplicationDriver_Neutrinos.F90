@@ -142,7 +142,7 @@ PROGRAM ApplicationDriver_Neutrinos
       dt_MAX             = 1.0d+1 * Millisecond
       dt_RATE            = 1.04_DP
       iCycleD            = 1
-      iCycleW            = 100
+      iCycleW            = 1000
 !!      iCycleW            = 1
       maxCycles          = 100000
 

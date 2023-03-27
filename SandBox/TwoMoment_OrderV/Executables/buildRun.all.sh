@@ -16,8 +16,7 @@ function set_common(){
    export WEAKLIB_DIR=${EXASTAR_HOME}/weaklib
    export WEAKLIB_TABLES_DIR=${EXASTAR_HOME}/weaklib-tables
    export THORNADO_MACHINE=beacon_intel
-## seems no longer needed   
-   #export IGC_OverrideOCLMaxParamSize=4096
+   export IGC_OverrideOCLMaxParamSize=4096
    export MPIR_CVAR_ENABLE_GPU=0
 
 ## for running
@@ -65,9 +64,10 @@ function buildApp(){
 
 function runApp(){
 
-   module load iprof
+#   module load iprof
+   module use /nfs/pdx/home/roymoore/modules
+   module load onetrace
    module list |& tee -a $LOG_FILE
-
 # For vtune
 ##   source /sharedjf/mjh/tools/Intel_VTune_Profiler_2022.3.0_nda/env/vars.sh
 ##   VT_OUTPUT=vtune07June2022
@@ -105,7 +105,8 @@ module purge
 
 #export IGC_EnableZEBinary=0
 
-export COMPILER_DATE="2023.03.10"
+#export COMPILER_DATE="2023.03.10"
+export COMPILER_DATE="2023.03.26"
 #export COMPILER_DATE="2022.12.30.002"
 export AADEBUG=""
 
@@ -118,7 +119,7 @@ module load nightly-compiler/${COMPILER_DATE}
 #module use /nfs/pdx/home/mheckel/modules/modulefiles_nightly
 #module load nightly-advisor/23.1.0.613762
 
-#opLevels=(O3)
+opLevels=(O3)
 
 #appNames=(ApplicationDriver)
 #logFiles=(sineWave)
@@ -128,7 +129,7 @@ module load nightly-compiler/${COMPILER_DATE}
 #logFiles=(relax)
 #userOptions=("MICROPHYSICS=WEAKLIB")
 
-opLevels=(O0 O1 O2 O3)
+##opLevels=(O0 O1 O2 O3)
 appNames=(ApplicationDriver ApplicationDriver_Neutrinos)
 logFiles=(sineWave relax)
 userOptions=("" "MICROPHYSICS=WEAKLIB")
@@ -141,7 +142,7 @@ do
    do 
       export OP_LEVEL=$op
       export APP_NAME=${appNames[jj]}
-      export LOG_FILE=${logFiles[jj]}.${OP_LEVEL}.${COMPILER_DATE}.DoneWR
+      export LOG_FILE=${logFiles[jj]}.${OP_LEVEL}.${COMPILER_DATE}.ms69
       export USER_OPTION=${userOptions[jj]}
       echo "Building and running" ${logFiles[jj]} "using Op-level "${OP_LEVEL} 
       echo $USER_OPTION

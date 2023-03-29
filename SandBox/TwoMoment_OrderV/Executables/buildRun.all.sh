@@ -55,7 +55,7 @@ function buildApp(){
    module list   |& tee -a $LOG_FILE
 
    make clean
-   ( time make $APP_NAME ${USER_OPTION} USE_OMP_OL=TRUE USE_GPU=TRUE USE_CUDA=FALSE USE_ONEMKL=TRUE ) |& tee -a $LOG_FILE
+   ( time make -j 16 $APP_NAME ${USER_OPTION} USE_OMP_OL=TRUE USE_GPU=TRUE USE_CUDA=FALSE USE_ONEMKL=TRUE ) |& tee -a $LOG_FILE
 }
 
 ###########################################################################################
@@ -105,8 +105,8 @@ module purge
 
 #export IGC_EnableZEBinary=0
 
-#export COMPILER_DATE="2023.03.10"
-export COMPILER_DATE="2023.03.26"
+export BASE_DATE="2023.03.10"
+export COMPILER_DATE="2023.03.28"
 #export COMPILER_DATE="2022.12.30.002"
 export AADEBUG=""
 
@@ -120,52 +120,93 @@ module load nightly-compiler/${COMPILER_DATE}
 #module load nightly-advisor/23.1.0.613762
 
 opLevels=(O3)
+grids=("[8,8,8]" "[16,16,16]")
+gridNames=("" "-xN16")
 
 #appNames=(ApplicationDriver)
 #logFiles=(sineWave)
 #userOptions=("")
+#gridLines=(83)
 
 #appNames=(ApplicationDriver_Neutrinos)
 #logFiles=(relax)
 #userOptions=("MICROPHYSICS=WEAKLIB")
+#gridLines=(125)
 
 ##opLevels=(O0 O1 O2 O3)
 appNames=(ApplicationDriver ApplicationDriver_Neutrinos)
 logFiles=(sineWave relax)
 userOptions=("" "MICROPHYSICS=WEAKLIB")
+gridLines=(83 125)
+
 
 set_common
 
+timeCompLog="timeComp_${COMPILER_DATE}.txt"
+if [[ -z $AADEBUG ]];then
+   rm -rf $timeCompLog
+   echo "AppName         Grid        OpLevel  :  ${COMPILER_DATE}   ${BASE_DATE}    TimeDiff   Percentage">>$timeCompLog
+   echo "------------------------------------------------------------------------------------------------">>$timeCompLog
+fi
+
 for ((jj=0; jj<${#appNames[@]}; jj++));
 do
-   for op in "${opLevels[@]}"
-   do 
-      export OP_LEVEL=$op
-      export APP_NAME=${appNames[jj]}
-      export LOG_FILE=${logFiles[jj]}.${OP_LEVEL}.${COMPILER_DATE}.ms69
-      export USER_OPTION=${userOptions[jj]}
-      echo "Building and running" ${logFiles[jj]} "using Op-level "${OP_LEVEL} 
-      echo $USER_OPTION
-      rm $LOG_FILE
+   export APP_NAME=${appNames[jj]}
+   for ((ii=0; ii<${#grids[@]}; ii++)); do
 
-      if [[ "$1" == -[rR]* ]]; then
-         if [ -f "${APP_NAME}_${THORNADO_MACHINE}" ];then
-            runApp
-         else
-            echo "The executable does not exist", ${APP_NAME}_${THORNADO_MACHINE}
-         fi
-      elif [[ "$1" == -[bB]* ]]; then
-         rm ${APP_NAME}_${THORNADO_MACHINE}
-         buildApp
-      else
-         rm ${APP_NAME}_${THORNADO_MACHINE}
-         buildApp
-         if [ -f "${APP_NAME}_${THORNADO_MACHINE}" ];then
-            runApp
-         else
-            echo "The executable does not exist", ${APP_NAME}_${THORNADO_MACHINE}
-         fi
-      fi      
+      sed -i "${gridLines[jj]}s/.*/      nX  =${grids[ii]}/" ../${appNames[jj]}.F90
+      for op in "${opLevels[@]}"
+      do 
+         export OP_LEVEL=$op
+         export LOG_FILE=${logFiles[jj]}.${OP_LEVEL}.${COMPILER_DATE}.ms69${gridNames[ii]}
+         export LOG_BASE=${logFiles[jj]}.${OP_LEVEL}.${BASE_DATE}.ms69${gridNames[ii]}
+         export USER_OPTION=${userOptions[jj]}
+         echo "Building and running" ${logFiles[jj]} "using Op-level "${OP_LEVEL} 
+         echo $USER_OPTION
+         rm $LOG_FILE
 
+         if [[ "$1" == -[rR]* ]]; then
+            if [ -f "${APP_NAME}_${THORNADO_MACHINE}" ];then
+               runApp
+            else
+               echo "The executable does not exist", ${APP_NAME}_${THORNADO_MACHINE}
+            fi
+         elif [[ "$1" == -[bB]* ]]; then
+            rm ${APP_NAME}_${THORNADO_MACHINE}
+            buildApp
+         else
+            rm ${APP_NAME}_${THORNADO_MACHINE}
+            buildApp
+            if [ -f "${APP_NAME}_${THORNADO_MACHINE}" ];then
+               runApp
+            else
+               echo "The executable does not exist", ${APP_NAME}_${THORNADO_MACHINE}
+            fi
+         fi      
+         ## compare IMEX_TIME to the BASE_DATE
+         if [[ -z $AADEBUG ]];then
+            baseTime=`grep Timer_IMEX $LOG_BASE |cut -d':' -f2`
+            baseTime=`echo $baseTime |cut -d ' ' -f1`
+            baseTime=`printf "%.6f" $baseTime`
+            currTime=`grep Timer_IMEX $LOG_FILE |cut -d':' -f2`
+            currTime=`echo $currTime |cut -d ' ' -f1`
+            currTime=`printf "%.6f" $currTime`
+            diffTime=`echo ${currTime}-${baseTime}|bc -l`
+            diffTime=`printf "%.6f" $diffTime`
+            percentage=`echo 100*${diffTime}/${baseTime}|bc -l`
+            percentage=`printf "%.4f" $percentage`
+            caseName=`printf "%-12s" ${logFiles[jj]}`
+            gg=`printf "%-12s" ${grids[ii]}`
+            echo "$caseName   $gg    $OP_LEVEL    :  $currTime     $baseTime    $diffTime    $percentage%" >>$timeCompLog
+         fi
+      done
    done
 done
+
+if [[ -z $AADEBUG ]];then
+   echo
+   echo " Performance Comparison between compiler $COMPILER_DATE and $BASE_DATE"
+   echo 
+
+   cat $timeCompLog
+fi

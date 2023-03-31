@@ -64,14 +64,9 @@ function buildApp(){
 
 function runApp(){
 
-#   module load iprof
-   module use /nfs/pdx/home/roymoore/modules
-   module load onetrace
    module list |& tee -a $LOG_FILE
 # For vtune
 ##   source /sharedjf/mjh/tools/Intel_VTune_Profiler_2022.3.0_nda/env/vars.sh
-##   VT_OUTPUT=vtune07June2022
-##   rm -rf $VT_OUTPUT
 
 # echo some env variables to $LOG_FILE   
 
@@ -80,13 +75,30 @@ function runApp(){
    echo "LIBOMPTARGET_LEVEL0_MEMORY_POOL="${LIBOMPTARGET_LEVEL0_MEMORY_POOL}  |& tee -a $LOG_FILE
 
 
-   ( time ./${APP_NAME}_${THORNADO_MACHINE} ) |& tee -a $LOG_FILE
-   #( time iprof ./${APP_NAME}_${THORNADO_MACHINE} ) |& tee -a $LOG_FILE
+   if [[ -z $ACTION ]]; then
+      ( time ./${APP_NAME}_${THORNADO_MACHINE} ) |& tee -a $LOG_FILE
+   elif [[ "$ACTION" == "iprof" ]]; then
+      module load iprof
+      ( time iprof ./${APP_NAME}_${THORNADO_MACHINE} ) |& tee -a $LOG_FILE
+   elif [[ "$ACTION" == "onetrace" ]]; then
+      module use /nfs/pdx/home/roymoore/modules
+      module load onetrace
+      (time onetrace -h -d  ./${APP_NAME}_${THORNADO_MACHINE} ) |& tee -a $LOG_FILE
+      #(time onetrace -h -d -v ./${APP_NAME}_${THORNADO_MACHINE} ) |& tee -a $LOG_FILE
+   elif [[ "$ACTION" == "vtune" ]]; then
+      VT_OUTPUT=vtune07June2022
+      rm -rf $VT_OUTPUT
+      vtune -collect gpu-hotspots -knob characterization-mode=global-local-accesses -data-limit=0 -r sineWaveMS69vtune ./${APP_NAME}_${THORNADO_MACHINE} |& tee -a $OUTPUT_LOG
+   elif [[ "$ACTION" == "advisor" ]]; then
+      module use /nfs/pdx/home/mheckel/modules/modulefiles_nightly
+      module load nightly-advisor/23.1.0.613762
+      time(advisor --collect=roofline --data-limit=0 --profile-gpu --project-dir=/localdisk/quanshao/ExaStar/thornado-dev/ -- ./${APP_NAME}_${THORNADO_MACHINE}) |& tee -a $OUTPUT_LOG
+   else
+      echo "Action needed, otherwise the application will not run"
+   fi
    #(time /nfs/pdx/home/mheckel/pti-gpu/tools/bin/onetrace -h -d -v ./${APP_NAME}_${THORNADO_MACHINE} ) |& tee -a $LOG_FILE
    #( time  gdb-oneapi ./${APP_NAME}_${THORNADO_MACHINE}) |& tee $OUTPUT_LOG
    #valgrind --tool=memcheck --leak-check=yes --show-reachable=yes --track-fds=yes ./${APP_NAME}_${THORNADO_MACHINE}|& tee -a $OUTPUT_LOG
-   #vtune -collect gpu-hotspots -knob characterization-mode=global-local-accesses -data-limit=0 -r sineWaveMS69vtune ./${APP_NAME}_${THORNADO_MACHINE} |& tee -a $OUTPUT_LOG
-   #time(advisor --collect=roofline --data-limit=0 --profile-gpu --project-dir=/localdisk/quanshao/ExaStar/thornado-dev/ -- ./${APP_NAME}_${THORNADO_MACHINE}) |& tee -a $OUTPUT_LOG
    #(vtune -collect gpu-hotspots -knob target-gpu=0:154:0.0 -ring-buffer 10 -r $VT_OUTPUT ./${APP_NAME}_${THORNADO_MACHINE}) |& tee -a $OUTPUT_LOG
     #(vtune -collect gpu-hotspots -knob target-gpu=0:154:0.0 -r $VT_OUTPUT ./${APP_NAME}_${THORNADO_MACHINE}) |& tee -a $OUTPUT_LOG
 ##   vtune-backend --allow-remote-access --enable-server-profiling --reset-passphrase --web-port 8080 --data-directory=${VT_OUTPUT}
@@ -105,8 +117,13 @@ module purge
 
 #export IGC_EnableZEBinary=0
 
+ACTION="onetrace"
+faction=""
+if [[ -n $ACTION ]];then
+   faction="-$ACTION"
+fi
 export BASE_DATE="2023.03.10"
-export COMPILER_DATE="2023.03.28"
+export COMPILER_DATE="2023.03.30"
 #export COMPILER_DATE="2022.12.30.002"
 export AADEBUG=""
 
@@ -116,9 +133,8 @@ module load nightly-compiler/${COMPILER_DATE}
 #module switch -f intel_compute_runtime/release/agama-devel-551 neo/agama-devel-sp3/573-23.05.25593.9-i572
 #module switch -f mpi/aurora_mpich/icc-sockets/51.2 mpi/aurora_mpich/icc-sockets/49.1
 
-#module use /nfs/pdx/home/mheckel/modules/modulefiles_nightly
-#module load nightly-advisor/23.1.0.613762
 
+#if action is empty, performance comparison will be done. otherwise there is no performance comparison and just run the app using such as onetrace, vtune etc. so action can be "", "onetrace", "iprof", "vtune", 
 opLevels=(O3)
 grids=("[8,8,8]" "[16,16,16]")
 gridNames=("" "-xN16")
@@ -142,8 +158,8 @@ gridLines=(83 125)
 
 set_common
 
-timeCompLog="timeComp_${COMPILER_DATE}.txt"
-if [[ -z $AADEBUG ]];then
+timeCompLog="timeComp_${COMPILER_DATE}.txt$AADEBUG"
+if [[ -z $ACTION ]];then
    rm -rf $timeCompLog
    echo "AppName         Grid        OpLevel  :  ${COMPILER_DATE}   ${BASE_DATE}    TimeDiff   Percentage">>$timeCompLog
    echo "------------------------------------------------------------------------------------------------">>$timeCompLog
@@ -158,8 +174,8 @@ do
       for op in "${opLevels[@]}"
       do 
          export OP_LEVEL=$op
-         export LOG_FILE=${logFiles[jj]}.${OP_LEVEL}.${COMPILER_DATE}.ms69${gridNames[ii]}
-         export LOG_BASE=${logFiles[jj]}.${OP_LEVEL}.${BASE_DATE}.ms69${gridNames[ii]}
+         export LOG_FILE=${logFiles[jj]}.${OP_LEVEL}.${COMPILER_DATE}.ms69${gridNames[ii]}${faction}$AADEBUG
+         export LOG_BASE=${logFiles[jj]}.${OP_LEVEL}.${BASE_DATE}.ms69${gridNames[ii]}$AADEBUG
          export USER_OPTION=${userOptions[jj]}
          echo "Building and running" ${logFiles[jj]} "using Op-level "${OP_LEVEL} 
          echo $USER_OPTION
@@ -184,7 +200,7 @@ do
             fi
          fi      
          ## compare IMEX_TIME to the BASE_DATE
-         if [[ -z $AADEBUG ]];then
+         if [[ -z $ACTION ]];then
             baseTime=`grep Timer_IMEX $LOG_BASE |cut -d':' -f2`
             baseTime=`echo $baseTime |cut -d ' ' -f1`
             baseTime=`printf "%.6f" $baseTime`
@@ -199,14 +215,15 @@ do
             gg=`printf "%-12s" ${grids[ii]}`
             echo "$caseName   $gg    $OP_LEVEL    :  $currTime     $baseTime    $diffTime    $percentage%" >>$timeCompLog
          fi
-      done
    done
 done
+done
 
-if [[ -z $AADEBUG ]];then
+if [[ -z $ACTION ]];then
    echo
    echo " Performance Comparison between compiler $COMPILER_DATE and $BASE_DATE"
    echo 
 
+   echo "cat $timeCompLog"
    cat $timeCompLog
 fi

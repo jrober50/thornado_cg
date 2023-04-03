@@ -117,7 +117,8 @@ module purge
 
 #export IGC_EnableZEBinary=0
 
-ACTION="onetrace"
+#ACTION="onetrace"
+ACTION=""
 faction=""
 if [[ -n $ACTION ]];then
    faction="-$ACTION"
@@ -136,13 +137,15 @@ module load nightly-compiler/${COMPILER_DATE}
 
 #if action is empty, performance comparison will be done. otherwise there is no performance comparison and just run the app using such as onetrace, vtune etc. so action can be "", "onetrace", "iprof", "vtune", 
 opLevels=(O3)
-grids=("[8,8,8]" "[16,16,16]")
-gridNames=("" "-xN16")
+#grids=("[8,8,8]" "[16,16,16]")
+#gridNames=("" "-xN16")
 
-#appNames=(ApplicationDriver)
-#logFiles=(sineWave)
-#userOptions=("")
-#gridLines=(83)
+grids=("[8,8,8]")
+gridNames=("")
+appNames=(ApplicationDriver)
+logFiles=(sineWave)
+userOptions=("")
+gridLines=(85)
 
 #appNames=(ApplicationDriver_Neutrinos)
 #logFiles=(relax)
@@ -150,10 +153,10 @@ gridNames=("" "-xN16")
 #gridLines=(125)
 
 ##opLevels=(O0 O1 O2 O3)
-appNames=(ApplicationDriver ApplicationDriver_Neutrinos)
-logFiles=(sineWave relax)
-userOptions=("" "MICROPHYSICS=WEAKLIB")
-gridLines=(83 125)
+#appNames=(ApplicationDriver ApplicationDriver_Neutrinos)
+#logFiles=(sineWave relax)
+#userOptions=("" "MICROPHYSICS=WEAKLIB")
+#gridLines=(85 125)
 
 
 set_common

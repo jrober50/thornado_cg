@@ -6,7 +6,8 @@ PROGRAM ApplicationDriver
   USE ProgramHeaderModule, ONLY: &
     iX_B0, iX_E0, iX_B1, iX_E1, &
     iE_B0, iE_E0, iE_B1, iE_E1, &
-    iZ_B0, iZ_E0, iZ_B1, iZ_E1
+    iZ_B0, iZ_E0, iZ_B1, iZ_E1, &
+    nDimsX
   USE GeometryFieldsModule, ONLY: &
     uGF
   USE GeometryFieldsModuleE, ONLY: &
@@ -37,6 +38,7 @@ PROGRAM ApplicationDriver
     ComputeError
   USE TwoMoment_TallyModule_OrderV, ONLY: &
     ComputeTally
+  USE TwoMoment_TimersModule_OrderV, ONLY: Timer_IMEX
 
   IMPLICIT NONE
 
@@ -80,7 +82,7 @@ PROGRAM ApplicationDriver
 
       ! --- Minerbo Closure Only ---
 
-      nX  = [ 8, 8, 8 ]
+      nX  =[8,8,8]
       !nX  = [ 16, 16, 16 ]
       !nX  = [ 32, 32, 32 ]
       xL  = [ 0.0_DP, 0.0_DP, 0.0_DP ]
@@ -849,6 +851,10 @@ PROGRAM ApplicationDriver
   CALL ComputeTally( iZ_B0, iZ_E0, iZ_B1, iZ_E1, t, uGE, uGF, uCF, uCR )
 
   CALL ComputeError( t )
+
+!! Compute Figure of Merit (FOM) 
+
+  WRITE(*,'(A,f20.4)') "FOM is :", nE*nSpecies*4*nNodes**(nDimsX+1)*nX(0)*nX(1)*nX(2)*iCycle/Timer_IMEX
 
   ! --- Auxiliary Finalization ---
 

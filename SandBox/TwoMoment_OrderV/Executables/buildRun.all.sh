@@ -86,13 +86,13 @@ function runApp(){
       (time onetrace -h -d  ./${APP_NAME}_${THORNADO_MACHINE} ) |& tee -a $LOG_FILE
       #(time onetrace -h -d -v ./${APP_NAME}_${THORNADO_MACHINE} ) |& tee -a $LOG_FILE
    elif [[ "$ACTION" == "vtune" ]]; then
-      VT_OUTPUT=vtune07June2022
+      VT_OUTPUT=vtuneMS69${COMPILER_DATE}
       rm -rf $VT_OUTPUT
-      vtune -collect gpu-hotspots -knob characterization-mode=global-local-accesses -data-limit=0 -r sineWaveMS69vtune ./${APP_NAME}_${THORNADO_MACHINE} |& tee -a $OUTPUT_LOG
+      vtune -collect gpu-hotspots -knob characterization-mode=global-local-accesses -data-limit=0 -r ${VT_OUTPUT} ./${APP_NAME}_${THORNADO_MACHINE} |& tee -a $OUTPUT_LOG
    elif [[ "$ACTION" == "advisor" ]]; then
       module use /nfs/pdx/home/mheckel/modules/modulefiles_nightly
       module load nightly-advisor/23.1.0.613762
-      time(advisor --collect=roofline --data-limit=0 --profile-gpu --project-dir=/localdisk/quanshao/ExaStar/thornado-dev/ -- ./${APP_NAME}_${THORNADO_MACHINE}) |& tee -a $OUTPUT_LOG
+      time(advisor --collect=roofline --data-limit=0 --profile-gpu --project-dir=/localdisk/quanshao/ExaStar/thornado-dev/roofline04-03 -- ./${APP_NAME}_${THORNADO_MACHINE}) |& tee -a $OUTPUT_LOG
    else
       echo "Action needed, otherwise the application will not run"
    fi
@@ -118,13 +118,17 @@ module purge
 #export IGC_EnableZEBinary=0
 
 #ACTION="onetrace"
+#ACTION="advisor"
 ACTION=""
 faction=""
 if [[ -n $ACTION ]];then
    faction="-$ACTION"
 fi
-export BASE_DATE="2023.03.10"
-export COMPILER_DATE="2023.03.30"
+#export BASE_DATE="2023.03.10"
+export BASE_DATE="2023.04.01"
+#export COMPILER_DATE="2023.03.30"
+export COMPILER_DATE="2023.04.02"
+#export COMPILER_DATE="2023.03.10"
 #export COMPILER_DATE="2022.12.30.002"
 export AADEBUG=""
 
@@ -137,26 +141,26 @@ module load nightly-compiler/${COMPILER_DATE}
 
 #if action is empty, performance comparison will be done. otherwise there is no performance comparison and just run the app using such as onetrace, vtune etc. so action can be "", "onetrace", "iprof", "vtune", 
 opLevels=(O3)
-#grids=("[8,8,8]" "[16,16,16]")
-#gridNames=("" "-xN16")
+grids=("[8,8,8]" "[16,16,16]")
+gridNames=("" "-xN16")
 
-grids=("[8,8,8]")
-gridNames=("")
-appNames=(ApplicationDriver)
-logFiles=(sineWave)
-userOptions=("")
-gridLines=(85)
+#grids=("[8,8,8]")
+#gridNames=("")
+#appNames=(ApplicationDriver)
+#logFiles=(sineWave)
+#userOptions=("")
+#gridLines=(85)
 
 #appNames=(ApplicationDriver_Neutrinos)
 #logFiles=(relax)
 #userOptions=("MICROPHYSICS=WEAKLIB")
-#gridLines=(125)
+#gridLines=(127)
 
 ##opLevels=(O0 O1 O2 O3)
-#appNames=(ApplicationDriver ApplicationDriver_Neutrinos)
-#logFiles=(sineWave relax)
-#userOptions=("" "MICROPHYSICS=WEAKLIB")
-#gridLines=(85 125)
+appNames=(ApplicationDriver ApplicationDriver_Neutrinos)
+logFiles=(sineWave relax)
+userOptions=("" "MICROPHYSICS=WEAKLIB")
+gridLines=(85 127)
 
 
 set_common
@@ -164,8 +168,9 @@ set_common
 timeCompLog="timeComp_${COMPILER_DATE}.txt$AADEBUG"
 if [[ -z $ACTION ]];then
    rm -rf $timeCompLog
-   echo "AppName         Grid        OpLevel  :  ${COMPILER_DATE}   ${BASE_DATE}    TimeDiff   Percentage">>$timeCompLog
-   echo "------------------------------------------------------------------------------------------------">>$timeCompLog
+   echo "                                             Time(seconds)                         |              Figure of Merit (FOM)">>$timeCompLog
+   echo "AppName     Grid      OpLevel :  ${COMPILER_DATE}   ${BASE_DATE}    TimeDiff   Percentage  |    ${COMPILER_DATE}   ${BASE_DATE}    FOM-Diff   Percentage">>$timeCompLog
+   echo "-----------------------------    ------------------------------------------------       ------------------------------------------------">>$timeCompLog
 fi
 
 for ((jj=0; jj<${#appNames[@]}; jj++));
@@ -206,17 +211,32 @@ do
          if [[ -z $ACTION ]];then
             baseTime=`grep Timer_IMEX $LOG_BASE |cut -d':' -f2`
             baseTime=`echo $baseTime |cut -d ' ' -f1`
-            baseTime=`printf "%.6f" $baseTime`
+            baseTime=`printf "%.4f" $baseTime`
             currTime=`grep Timer_IMEX $LOG_FILE |cut -d':' -f2`
             currTime=`echo $currTime |cut -d ' ' -f1`
-            currTime=`printf "%.6f" $currTime`
+            currTime=`printf "%.4f" $currTime`
             diffTime=`echo ${currTime}-${baseTime}|bc -l`
-            diffTime=`printf "%.6f" $diffTime`
+            diffTime=`printf "%.4f" $diffTime`
             percentage=`echo 100*${diffTime}/${baseTime}|bc -l`
-            percentage=`printf "%.4f" $percentage`
-            caseName=`printf "%-12s" ${logFiles[jj]}`
-            gg=`printf "%-12s" ${grids[ii]}`
-            echo "$caseName   $gg    $OP_LEVEL    :  $currTime     $baseTime    $diffTime    $percentage%" >>$timeCompLog
+            percentage=`printf "%.2f" $percentage`
+            currTime=`printf "%12.4e" $currTime`
+            baseTime=`printf "%12.4e" $baseTime`
+            diffTime=`printf "%12.4e" $diffTime`
+
+            baseFOM=`grep FOM $LOG_BASE |cut -d':' -f2`
+            baseFOM=`printf "%.4f" $baseFOM`
+            currFOM=`grep FOM $LOG_FILE |cut -d':' -f2`
+            currFOM=`printf "%.4f" $currFOM`
+            diffFOM=`echo ${currFOM}-${baseFOM}|bc -l`
+            percentFOM=`echo 100*${diffFOM}/${baseFOM}|bc -l`
+            percentFOM=`printf "%.2f" $percentFOM`
+            baseFOM=`printf "%12.4e" $baseFOM`
+            currFOM=`printf "%12.4e" $currFOM`
+            diffFOM=`printf "%12.4e" $diffFOM`
+
+            caseName=`printf "%-10s" ${logFiles[jj]}`
+            gg=`printf "%-10s" ${grids[ii]}`
+            echo "$caseName $gg   $OP_LEVEL    :$currTime $baseTime $diffTime    $percentage%        $currFOM $baseFOM $diffFOM    $percentFOM%" >>$timeCompLog
          fi
    done
 done

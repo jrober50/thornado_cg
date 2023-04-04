@@ -82,7 +82,7 @@ PROGRAM ApplicationDriver
 
       ! --- Minerbo Closure Only ---
 
-      nX  =[8,8,8]
+      nX  =[16,16,16]
       !nX  = [ 16, 16, 16 ]
       !nX  = [ 32, 32, 32 ]
       xL  = [ 0.0_DP, 0.0_DP, 0.0_DP ]
@@ -105,7 +105,7 @@ PROGRAM ApplicationDriver
 !!      iCycleW = 1000
 !!      iCycleW = 1
 !!      maxCycles = 1
-      maxCycles = 1000
+      maxCycles = 10000
 
       V_0 = [ 0.1_DP, 0.0_DP, 0.0_DP ]
 
@@ -854,7 +854,7 @@ PROGRAM ApplicationDriver
 
 !! Compute Figure of Merit (FOM) 
 
-  WRITE(*,'(A,f20.4)') "FOM is :", nE*nSpecies*4*nNodes**(nDimsX+1)*nX(0)*nX(1)*nX(2)*iCycle/Timer_IMEX
+  WRITE(*,'(A,e14.6)') "FOM is :", 1.0*nE*nSpecies*4*nNodes**(nDimsX+1)*nX(1)*nX(2)*nX(3)*iCycle/Timer_IMEX
 
   ! --- Auxiliary Finalization ---
 

@@ -396,7 +396,6 @@ CONTAINS
              10.0d0**( S_T ) - OS_S, &
              Verbose_Option = Verbose )
 
-!! Shaoping: Need to use" TARGET ENTER DATA MAP(always" directive,  otherwise the allocatable array will not be mapped/updated correctly.          
 #if defined(THORNADO_OMP_OL)
     !$OMP TARGET ENTER DATA &
     !$OMP MAP(always, to: D_T, T_T, Y_T, &
@@ -423,7 +422,6 @@ CONTAINS
   SUBROUTINE FinalizeEquationOfState_TABLE
 
 #ifdef MICROPHYSICS_WEAKLIB
-!! Shaoping: release is needed to release the memory
 #if defined(THORNADO_OMP_OL)
     !$OMP TARGET EXIT DATA &
     !$OMP MAP(release: D_T, T_T, Y_T, &
@@ -680,7 +678,7 @@ CONTAINS
       DO iP = 1, nP
         IF ( Error(iP) > 0 ) THEN
           CALL DescribeEOSInversionError( Error(iP) )
-!! Shaoping : As D, E, Y are passed in as intent(in), so the following UPDATE FROM is wrong.           
+!! Shaoping : As D, E, Y are passed in as intent(in), and they are not updated on GPU so we do no tneed UPDATE FROM.           
 #if defined(THORNADO_OMP_OL)
 !!          !$OMP TARGET UPDATE FROM &
 !!          !$OMP ( D(iP), E(iP), Y(iP) )
@@ -997,11 +995,9 @@ CONTAINS
 
     nP = SIZE( D )
 
-!! Shaoping: Adding D_T, T_T, Y_T, E_T to OMP MAP (to:) list, otherwise these are not available (values are zero) in the nested function calls of looking up the table.
-
 #if defined(THORNADO_OMP_OL)
     !$OMP TARGET TEAMS DISTRIBUTE PARALLEL DO SIMD &
-    !$OMP MAP( to: D, Ev, Ne , D_T, T_T, Y_T, E_T) &
+    !$OMP MAP( to: D, Ev, Ne ) &
     !$OMP MAP( from: T, Em, Y, Error )
 #elif defined(THORNADO_OACC)
     !$ACC PARALLEL LOOP GANG VECTOR &
@@ -1021,16 +1017,17 @@ CONTAINS
     END DO
 
     IF ( ANY( Error > 0 ) ) THEN
+!! Shaoping: make sense to update once from TARGET.       
+#if defined(THORNADO_OMP_OL)
+          !$OMP TARGET UPDATE FROM &
+          !$OMP ( D, Em, Y )
+#elif defined(THORNADO_OACC)
+          !$ACC UPDATE HOST &
+          !$ACC ( D, Em, Y )
+#endif
       DO iP = 1, nP
         IF ( Error(iP) > 0 ) THEN
           CALL DescribeEOSInversionError( Error(iP) )
-#if defined(THORNADO_OMP_OL)
-          !$OMP TARGET UPDATE FROM &
-          !$OMP ( D(iP), Em(iP), Y(iP) )
-#elif defined(THORNADO_OACC)
-          !$ACC UPDATE HOST &
-          !$ACC ( D(iP), Em(iP), Y(iP) )
-#endif
           D_P = D(iP)  / ( Gram / Centimeter**3 )
           E_P = Em(iP) / ( Erg / Gram )
           Y_P = Y(iP)

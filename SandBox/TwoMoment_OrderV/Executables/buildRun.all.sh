@@ -218,7 +218,7 @@ do
             diffTime=`echo ${currTime}-${baseTime}|bc -l`
             diffTime=`printf "%.4f" $diffTime`
             percentage=`echo 100*${diffTime}/${baseTime}|bc -l`
-            percentage=`printf "%.2f" $percentage`
+            percentage=`printf "%8.2f" $percentage`
             currTime=`printf "%12.4e" $currTime`
             baseTime=`printf "%12.4e" $baseTime`
             diffTime=`printf "%12.4e" $diffTime`
@@ -229,14 +229,14 @@ do
             currFOM=`printf "%.4f" $currFOM`
             diffFOM=`echo ${currFOM}-${baseFOM}|bc -l`
             percentFOM=`echo 100*${diffFOM}/${baseFOM}|bc -l`
-            percentFOM=`printf "%.2f" $percentFOM`
+            percentFOM=`printf "%8.2f" $percentFOM`
             baseFOM=`printf "%12.4e" $baseFOM`
             currFOM=`printf "%12.4e" $currFOM`
             diffFOM=`printf "%12.4e" $diffFOM`
 
             caseName=`printf "%-10s" ${logFiles[jj]}`
             gg=`printf "%-10s" ${grids[ii]}`
-            echo "$caseName $gg   $OP_LEVEL    :$currTime $baseTime $diffTime    $percentage%        $currFOM $baseFOM $diffFOM    $percentFOM%" >>$timeCompLog
+            echo "$caseName $gg   $OP_LEVEL    :$currTime $baseTime $diffTime $percentage%       $currFOM $baseFOM $diffFOM $percentFOM%" >>$timeCompLog
          fi
    done
 done

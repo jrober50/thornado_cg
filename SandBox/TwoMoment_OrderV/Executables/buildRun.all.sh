@@ -127,7 +127,7 @@ fi
 #export BASE_DATE="2023.03.10"
 export BASE_DATE="2023.04.01"
 #export COMPILER_DATE="2023.03.30"
-export COMPILER_DATE="2023.04.02"
+export COMPILER_DATE="2023.04.03"
 #export COMPILER_DATE="2023.03.10"
 #export COMPILER_DATE="2022.12.30.002"
 export AADEBUG=""
@@ -165,12 +165,12 @@ gridLines=(85 127)
 
 set_common
 
-timeCompLog="timeComp_${COMPILER_DATE}.txt$AADEBUG"
+timeFOMLog="timeFOM_${COMPILER_DATE}.txt$AADEBUG"
 if [[ -z $ACTION ]];then
-   rm -rf $timeCompLog
-   echo "                                             Time(seconds)                         |              Figure of Merit (FOM)">>$timeCompLog
-   echo "AppName     Grid      OpLevel :  ${COMPILER_DATE}   ${BASE_DATE}    TimeDiff   Percentage  |    ${COMPILER_DATE}   ${BASE_DATE}    FOM-Diff   Percentage">>$timeCompLog
-   echo "-----------------------------    ------------------------------------------------       ------------------------------------------------">>$timeCompLog
+   rm -rf $timeFOMLog
+   echo "                                             Time(seconds)                         |              Figure of Merit (FOM)">>$timeFOMLog
+   echo "AppName     Grid      OpLevel :  ${COMPILER_DATE}   ${BASE_DATE}    TimeDiff   Percentage  |    ${COMPILER_DATE}   ${BASE_DATE}    FOM-Diff   Percentage">>$timeFOMLog
+   echo "-----------------------------    ------------------------------------------------       ------------------------------------------------">>$timeFOMLog
 fi
 
 for ((jj=0; jj<${#appNames[@]}; jj++));
@@ -236,7 +236,7 @@ do
 
             caseName=`printf "%-10s" ${logFiles[jj]}`
             gg=`printf "%-10s" ${grids[ii]}`
-            echo "$caseName $gg   $OP_LEVEL    :$currTime $baseTime $diffTime $percentage%       $currFOM $baseFOM $diffFOM $percentFOM%" >>$timeCompLog
+            echo "$caseName $gg   $OP_LEVEL    :$currTime $baseTime $diffTime $percentage%       $currFOM $baseFOM $diffFOM $percentFOM%" >>$timeFOMLog
          fi
    done
 done
@@ -247,6 +247,6 @@ if [[ -z $ACTION ]];then
    echo " Performance Comparison between compiler $COMPILER_DATE and $BASE_DATE"
    echo 
 
-   echo "cat $timeCompLog"
-   cat $timeCompLog
+   echo "cat $timeFOMLog"
+   cat $timeFOMLog
 fi

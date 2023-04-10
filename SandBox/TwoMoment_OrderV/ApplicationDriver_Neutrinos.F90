@@ -379,6 +379,7 @@ PROGRAM ApplicationDriver_Neutrinos
 !! Compute Figure of Merit (FOM)
 
   WRITE(*,'(A,e14.6)') "FOM is :", 1.0*nE*nSpecies*4*nNodes**(nDimsX+1)*nX(1)*nX(2)*nX(3)*iCycle/Timer_IMEX
+  WRITE(*,'(A,4I6, I16, I10, e14.6)') "xxxx is :", nE,nSpecies,nNodes,(nDimsX+1),nX(1)*nX(2)*nX(3),iCycle,Timer_IMEX
 
   CALL FinalizeDriver
 

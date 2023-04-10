@@ -74,10 +74,7 @@ function runApp(){
    echo "EnableImplicitScaling="${EnableImplicitScaling}                      |& tee -a $LOG_FILE
    echo "LIBOMPTARGET_LEVEL0_MEMORY_POOL="${LIBOMPTARGET_LEVEL0_MEMORY_POOL}  |& tee -a $LOG_FILE
 
-
-   if [[ -z $ACTION ]]; then
-      ( time ./${APP_NAME}_${THORNADO_MACHINE} ) |& tee -a $LOG_FILE
-   elif [[ "$ACTION" == "iprof" ]]; then
+   if [[ "$ACTION" == "iprof" ]]; then
       module load iprof
       ( time iprof ./${APP_NAME}_${THORNADO_MACHINE} ) |& tee -a $LOG_FILE
    elif [[ "$ACTION" == "onetrace" ]]; then
@@ -94,8 +91,9 @@ function runApp(){
       module load nightly-advisor/23.1.0.613762
       time(advisor --collect=roofline --data-limit=0 --profile-gpu --project-dir=/localdisk/quanshao/ExaStar/thornado-dev/roofline04-03 -- ./${APP_NAME}_${THORNADO_MACHINE}) |& tee -a $OUTPUT_LOG
    else
-      echo "Action needed, otherwise the application will not run"
+      ( time ./${APP_NAME}_${THORNADO_MACHINE} ) |& tee -a $LOG_FILE
    fi
+
    #(time /nfs/pdx/home/mheckel/pti-gpu/tools/bin/onetrace -h -d -v ./${APP_NAME}_${THORNADO_MACHINE} ) |& tee -a $LOG_FILE
    #( time  gdb-oneapi ./${APP_NAME}_${THORNADO_MACHINE}) |& tee $OUTPUT_LOG
    #valgrind --tool=memcheck --leak-check=yes --show-reachable=yes --track-fds=yes ./${APP_NAME}_${THORNADO_MACHINE}|& tee -a $OUTPUT_LOG
@@ -127,7 +125,7 @@ fi
 #export BASE_DATE="2023.03.10"
 export BASE_DATE="2023.04.01"
 #export COMPILER_DATE="2023.03.30"
-export COMPILER_DATE="2023.04.03"
+export COMPILER_DATE="2023.04.06"
 #export COMPILER_DATE="2023.03.10"
 #export COMPILER_DATE="2022.12.30.002"
 export AADEBUG=""
@@ -135,8 +133,20 @@ export AADEBUG=""
 #export ONEAPI_MODULE_OVERRIDE=oneapi/eng-compiler/2022.12.30.003
 module load nightly-compiler/${COMPILER_DATE}
 #module load oneapi/eng-compiler/${COMPILER_DATE}
-#module switch -f intel_compute_runtime/release/agama-devel-551 neo/agama-devel-sp3/573-23.05.25593.9-i572
-#module switch -f mpi/aurora_mpich/icc-sockets/51.2 mpi/aurora_mpich/icc-sockets/49.1
+
+UMD=""
+#UMD="neo/agama-devel-sp3/611-23.09.25812.14-609"
+UMD="neo/agama-devel-sp3/609-23.09.25812.14-609"
+#UMD="neo/agama-devel-sp3/610-23.09.25812.14-609"
+#UMD="neo/agama-devel-sp3/608-23.05.25593.18-i606"
+
+umdf=""
+if [[ -n $UMD ]]; then
+   module switch -f intel_compute_runtime/release/agama-devel-551 $UMD
+   umdf=`echo $UMD |cut -d '/' -f3`
+   umdf=`echo $umdf |cut -d '-' -f1`
+   umdf="-umd$umdf"
+fi
 
 
 #if action is empty, performance comparison will be done. otherwise there is no performance comparison and just run the app using such as onetrace, vtune etc. so action can be "", "onetrace", "iprof", "vtune", 
@@ -165,7 +175,7 @@ gridLines=(85 127)
 
 set_common
 
-timeFOMLog="timeFOM_${COMPILER_DATE}.txt$AADEBUG"
+timeFOMLog="timeFOM_${COMPILER_DATE}.txt${umdf}$AADEBUG"
 if [[ -z $ACTION ]];then
    rm -rf $timeFOMLog
    echo "                                             Time(seconds)                         |              Figure of Merit (FOM)">>$timeFOMLog
@@ -182,7 +192,7 @@ do
       for op in "${opLevels[@]}"
       do 
          export OP_LEVEL=$op
-         export LOG_FILE=${logFiles[jj]}.${OP_LEVEL}.${COMPILER_DATE}.ms69${gridNames[ii]}${faction}$AADEBUG
+         export LOG_FILE=${logFiles[jj]}.${OP_LEVEL}.${COMPILER_DATE}.ms69${umdf}${gridNames[ii]}${faction}$AADEBUG
          export LOG_BASE=${logFiles[jj]}.${OP_LEVEL}.${BASE_DATE}.ms69${gridNames[ii]}$AADEBUG
          export USER_OPTION=${userOptions[jj]}
          echo "Building and running" ${logFiles[jj]} "using Op-level "${OP_LEVEL} 
@@ -211,24 +221,25 @@ do
          if [[ -z $ACTION ]];then
             baseTime=`grep Timer_IMEX $LOG_BASE |cut -d':' -f2`
             baseTime=`echo $baseTime |cut -d ' ' -f1`
-            baseTime=`printf "%.4f" $baseTime`
+            baseTime=`printf "%.6f" $baseTime`
             currTime=`grep Timer_IMEX $LOG_FILE |cut -d':' -f2`
             currTime=`echo $currTime |cut -d ' ' -f1`
-            currTime=`printf "%.4f" $currTime`
+            currTime=`printf "%.6f" $currTime`
             diffTime=`echo ${currTime}-${baseTime}|bc -l`
-            diffTime=`printf "%.4f" $diffTime`
             percentage=`echo 100*${diffTime}/${baseTime}|bc -l`
+
             percentage=`printf "%8.2f" $percentage`
             currTime=`printf "%12.4e" $currTime`
             baseTime=`printf "%12.4e" $baseTime`
             diffTime=`printf "%12.4e" $diffTime`
 
             baseFOM=`grep FOM $LOG_BASE |cut -d':' -f2`
-            baseFOM=`printf "%.4f" $baseFOM`
+            baseFOM=`printf "%.6f" $baseFOM`
             currFOM=`grep FOM $LOG_FILE |cut -d':' -f2`
-            currFOM=`printf "%.4f" $currFOM`
+            currFOM=`printf "%.6f" $currFOM`
             diffFOM=`echo ${currFOM}-${baseFOM}|bc -l`
             percentFOM=`echo 100*${diffFOM}/${baseFOM}|bc -l`
+
             percentFOM=`printf "%8.2f" $percentFOM`
             baseFOM=`printf "%12.4e" $baseFOM`
             currFOM=`printf "%12.4e" $currFOM`

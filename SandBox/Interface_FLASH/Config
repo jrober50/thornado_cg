@@ -1,0 +1,42 @@
+#Config file for physics/RadTrans/RadTransMain/TwoMoment/Thornado/SandBox/Interface_FLASH
+
+REQUIRES ../../Modules/Numbers
+REQUIRES ../../Modules/Units
+REQUIRES ../../Modules/ProgramHeader
+REQUIRES ../../Modules/Library
+REQUIRES ../../Modules/Mesh
+REQUIRES ../../Modules/Geometry
+REQUIRES ../../Modules/Fields
+REQUIRES ../../Modules/EquationOfState
+REQUIRES ../../Modules/Opacities
+REQUIRES ../../Modules/InputOutput
+REQUIRES ../../Modules/Euler
+REQUIRES ../../Modules/TwoMoment
+REQUIRES ../../Modules/Runtime
+
+USESETUPVARS thornadoOrder
+IF thornadoOrder == "ORDER_1"
+  REQUIRES ./OrderOne
+ELSEIF thornadoOrder == "ORDER_V"
+  REQUIRES ./OrderV
+ELSEIF thornadoOrder == "RELATIVISTIC"
+  REQUIRES ./Relativistic
+ELSE
+  REQUIRES ./OrderV
+ENDIF
+
+USESETUPVARS thornadoGPU
+IF thornadoGPU == "AMD"
+  REQUIRES ./AMD
+ELSEIF thornadoGPU == "INTEL"
+  REQUIRES ./INTEL
+ELSEIF thornadoGPU == "NVIDIA"
+  REQUIRES ./NVIDIA
+ENDIF
+
+USESETUPVARS thornadoACC, thornadoOMP_OL
+IF thornadoACC
+  REQUIRES ./OpenACC
+ELSEIF thornadoOMP_OL
+  REQUIRES ./OpenMP_OL
+ENDIF

@@ -83,13 +83,12 @@ function runApp(){
       (time onetrace -h -d  ./${APP_NAME}_${THORNADO_MACHINE} ) |& tee -a $LOG_FILE
       #(time onetrace -h -d -v ./${APP_NAME}_${THORNADO_MACHINE} ) |& tee -a $LOG_FILE
    elif [[ "$ACTION" == "vtune" ]]; then
-      VT_OUTPUT=vtuneMS69${COMPILER_DATE}
-      rm -rf $VT_OUTPUT
       vtune -collect gpu-hotspots -knob characterization-mode=global-local-accesses -data-limit=0 -r ${VT_OUTPUT} ./${APP_NAME}_${THORNADO_MACHINE} |& tee -a $OUTPUT_LOG
    elif [[ "$ACTION" == "advisor" ]]; then
       module use /nfs/pdx/home/mheckel/modules/modulefiles_nightly
-      module load nightly-advisor/23.1.0.613762
-      time(advisor --collect=roofline --data-limit=0 --profile-gpu --project-dir=/localdisk/quanshao/ExaStar/thornado-dev/roofline04-03 -- ./${APP_NAME}_${THORNADO_MACHINE}) |& tee -a $OUTPUT_LOG
+      module load nightly-advisor/23.1.0.613762  ## VERY slow and require old binary. 
+      #module load nightly-advisor/23.1.0.613901
+      time(advisor --collect=roofline --data-limit=0 --profile-gpu --project-dir=/localdisk/quanshao/ExaStar/thornado-dev/roofline04-03-762 -- ./${APP_NAME}_${THORNADO_MACHINE}) |& tee -a $OUTPUT_LOG
    else
       ( time ./${APP_NAME}_${THORNADO_MACHINE} ) |& tee -a $LOG_FILE
    fi
@@ -112,20 +111,22 @@ function runApp(){
 module purge
 
 #export A21_SDK_MKLROOT_OVERRIDE=/exaperf/nightly/mkl-cev/2022.11.02 ## Latest nightly, i.e. 10.06, uses this mkl
+export A21_SDK_MKLROOT_OVERRIDE=/exaperf/nightly/mkl-cev/2023.04.19 ## Latest nightly, i.e. 10.06, uses this mkl
 
 #export IGC_EnableZEBinary=0
+#export IGC_ForceOCLSIMDWidth=16
+#export LIBOMPTARGET_LEVEL_ZERO_USE_IMMEDIATE_COMMAND_LIST=F
 
 #ACTION="onetrace"
 #ACTION="advisor"
 ACTION=""
-faction=""
 if [[ -n $ACTION ]];then
    faction="-$ACTION"
 fi
 #export BASE_DATE="2023.03.10"
 export BASE_DATE="2023.04.01"
 #export COMPILER_DATE="2023.03.30"
-export COMPILER_DATE="2023.04.06"
+export COMPILER_DATE="2023.05.03"
 #export COMPILER_DATE="2023.03.10"
 #export COMPILER_DATE="2022.12.30.002"
 export AADEBUG=""
@@ -134,20 +135,34 @@ export AADEBUG=""
 module load nightly-compiler/${COMPILER_DATE}
 #module load oneapi/eng-compiler/${COMPILER_DATE}
 
-UMD=""
+#UMD=""
 #UMD="neo/agama-devel-sp3/611-23.09.25812.14-609"
-UMD="neo/agama-devel-sp3/609-23.09.25812.14-609"
+#UMD="neo/agama-devel-sp3/609-23.09.25812.14-609"
 #UMD="neo/agama-devel-sp3/610-23.09.25812.14-609"
 #UMD="neo/agama-devel-sp3/608-23.05.25593.18-i606"
+#UMD="neo/agama-devel-sp3/619-23.09.25812.15-619"
+#UMD="neo/agama-devel-sp3/625-23.13.26032.7-624"
+#UMD="neo/agama-devel-sp3/622-23.09.25812.15-622"
+#UMD="neo/agama-devel-sp3/628-23.13.26032.8-626"
+#UMD="neo/agama-devel-sp3/627-23.13.26032.8-626"
+#UMD="neo/agama-devel-sp3/636-23.13.26032.22-631"
+#UMD="neo/agama-devel-sp3/637-23.13.26032.26-637"
 
+#UMD="intel_compute_runtime/release/agama-devel-602"
+UMD="neo/agama-devel-sp3/639-23.13.26032.26-637"
 umdf=""
 if [[ -n $UMD ]]; then
    module switch -f intel_compute_runtime/release/agama-devel-551 $UMD
-   umdf=`echo $UMD |cut -d '/' -f3`
-   umdf=`echo $umdf |cut -d '-' -f1`
-   umdf="-umd$umdf"
+   if [[ $UMD == intel_compute* ]]; then
+      umdf="-devel602"
+      export useAGRF="FALSE"
+   else
+      umdf=`echo $UMD |cut -d '/' -f3`
+      umdf=`echo $umdf |cut -d '-' -f1`
+      umdf="-umd$umdf"
+      export useAGRF="TRUE"
+   fi
 fi
-
 
 #if action is empty, performance comparison will be done. otherwise there is no performance comparison and just run the app using such as onetrace, vtune etc. so action can be "", "onetrace", "iprof", "vtune", 
 opLevels=(O3)
@@ -158,20 +173,33 @@ gridNames=("" "-xN16")
 #gridNames=("")
 #appNames=(ApplicationDriver)
 #logFiles=(sineWave)
+#CaseNames=(SineWaveStreaming)
 #userOptions=("")
 #gridLines=(85)
 
 #appNames=(ApplicationDriver_Neutrinos)
 #logFiles=(relax)
+#CaseNames=(Relaxation)
 #userOptions=("MICROPHYSICS=WEAKLIB")
 #gridLines=(127)
 
 ##opLevels=(O0 O1 O2 O3)
 appNames=(ApplicationDriver ApplicationDriver_Neutrinos)
 logFiles=(sineWave relax)
+CaseNames=(SineWaveStreaming Relaxation)
 userOptions=("" "MICROPHYSICS=WEAKLIB")
 gridLines=(85 127)
 
+if [[ "$ACTION" == "vtune" ]]; then
+   opLevels=(O3)
+   grids=("[8,8,8]")
+   gridNames=("")
+   appNames=(ApplicationDriver ApplicationDriver_Neutrinos)
+   logFiles=(sineWave relax)
+   CaseNames=(SineWaveStreaming Relaxation)
+   userOptions=("" "MICROPHYSICS=WEAKLIB")
+   gridLines=(85 127)
+fi
 
 set_common
 
@@ -193,30 +221,53 @@ do
       do 
          export OP_LEVEL=$op
          export LOG_FILE=${logFiles[jj]}.${OP_LEVEL}.${COMPILER_DATE}.ms69${umdf}${gridNames[ii]}${faction}$AADEBUG
-         export LOG_BASE=${logFiles[jj]}.${OP_LEVEL}.${BASE_DATE}.ms69${gridNames[ii]}$AADEBUG
+         export LOG_BASE=${logFiles[jj]}.${OP_LEVEL}.${BASE_DATE}.ms69-umd602${gridNames[ii]}$AADEBUG
+         #export LOG_BASE=${logFiles[jj]}.${OP_LEVEL}.${BASE_DATE}.ms69${umdf}${gridNames[ii]}$AADEBUG
          export USER_OPTION=${userOptions[jj]}
-         echo "Building and running" ${logFiles[jj]} "using Op-level "${OP_LEVEL} 
-         echo $USER_OPTION
-         rm $LOG_FILE
 
-         if [[ "$1" == -[rR]* ]]; then
-            if [ -f "${APP_NAME}_${THORNADO_MACHINE}" ];then
-               runApp
+         if [[ "$ACTION" == "vtune" ]]; then
+            export VT_OUTPUT=vtune_${logFiles[jj]}.${COMPILER_DATE}${umdf}
+            rm -rf $VT_OUTPUT
+         fi
+
+         if [[ "$1" == "FOM" ]];then
+            echo ""
+            echo "Gathering performance data from $LOG_FILE and $LOG_BASE"
+            echo ""
+         else 
+            #echo $USER_OPTION
+            echo "Building and/or running" ${logFiles[jj]} "using Op-level "${OP_LEVEL} 
+            rm $LOG_FILE
+
+            if [[ "$1" == -[rR]* ]]; then
+               echo ""
+               echo "Runing ${CaseNames[jj]} ..."
+               echo ""
+               if [ -f "${APP_NAME}_${THORNADO_MACHINE}" ];then
+                  runApp
+               else
+                  echo "The executable does not exist", ${APP_NAME}_${THORNADO_MACHINE}
+               fi
+            elif [[ "$1" == -[bB]* ]]; then
+               echo ""
+               echo "Compiling ${CaseNames[jj]} ..."
+               echo ""
+               rm ${APP_NAME}_${THORNADO_MACHINE}
+               buildApp
             else
-               echo "The executable does not exist", ${APP_NAME}_${THORNADO_MACHINE}
-            fi
-         elif [[ "$1" == -[bB]* ]]; then
-            rm ${APP_NAME}_${THORNADO_MACHINE}
-            buildApp
-         else
-            rm ${APP_NAME}_${THORNADO_MACHINE}
-            buildApp
-            if [ -f "${APP_NAME}_${THORNADO_MACHINE}" ];then
-               runApp
-            else
-               echo "The executable does not exist", ${APP_NAME}_${THORNADO_MACHINE}
-            fi
-         fi      
+               rm ${APP_NAME}_${THORNADO_MACHINE}
+               echo ""
+               echo "Compiling and Running ${CaseNames[jj]} ..."
+               echo ""
+               buildApp
+               if [ -f "${APP_NAME}_${THORNADO_MACHINE}" ];then
+                  runApp
+               else
+                  echo "The executable does not exist", ${APP_NAME}_${THORNADO_MACHINE}
+               fi
+            fi   
+         fi
+
          ## compare IMEX_TIME to the BASE_DATE
          if [[ -z $ACTION ]];then
             baseTime=`grep Timer_IMEX $LOG_BASE |cut -d':' -f2`

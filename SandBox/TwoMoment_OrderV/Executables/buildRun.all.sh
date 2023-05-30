@@ -83,7 +83,7 @@ function runApp(){
       (time onetrace -h -d  ./${APP_NAME}_${THORNADO_MACHINE} ) |& tee -a $LOG_FILE
       #(time onetrace -h -d -v ./${APP_NAME}_${THORNADO_MACHINE} ) |& tee -a $LOG_FILE
    elif [[ "$ACTION" == "vtune" ]]; then
-      vtune -collect gpu-hotspots -knob characterization-mode=global-local-accesses -data-limit=0 -r ${VT_OUTPUT} ./${APP_NAME}_${THORNADO_MACHINE} |& tee -a $OUTPUT_LOG
+      (time (vtune -collect gpu-hotspots -knob characterization-mode=global-local-accesses -data-limit=0 -r ${VT_OUTPUT} ./${APP_NAME}_${THORNADO_MACHINE})) |& tee -a $OUTPUT_LOG
    elif [[ "$ACTION" == "advisor" ]]; then
       module use /nfs/pdx/home/mheckel/modules/modulefiles_nightly
       module load nightly-advisor/23.1.0.613762  ## VERY slow and require old binary. 
@@ -111,14 +111,17 @@ function runApp(){
 module purge
 
 #export A21_SDK_MKLROOT_OVERRIDE=/exaperf/nightly/mkl-cev/2022.11.02 ## Latest nightly, i.e. 10.06, uses this mkl
-export A21_SDK_MKLROOT_OVERRIDE=/exaperf/nightly/mkl-cev/2023.04.19 ## Latest nightly, i.e. 10.06, uses this mkl
+export A21_SDK_MKLROOT_OVERRIDE=/exaperf/nightly/mkl-cev/2023.04.19 ## Latest nightly, i.e. 2023-05-01 use this mkl 
 
 #export IGC_EnableZEBinary=0
 #export IGC_ForceOCLSIMDWidth=16
 #export LIBOMPTARGET_LEVEL_ZERO_USE_IMMEDIATE_COMMAND_LIST=F
 
+ACTION="iprof"
+#ACTION="perf"
 #ACTION="onetrace"
 #ACTION="advisor"
+#ACTION="vtune"
 ACTION=""
 if [[ -n $ACTION ]];then
    faction="-$ACTION"
@@ -127,6 +130,11 @@ fi
 export BASE_DATE="2023.04.01"
 #export COMPILER_DATE="2023.03.30"
 export COMPILER_DATE="2023.05.03"
+#export COMPILER_DATE="2023.05.21"
+#export COMPILER_DATE="2023.05.22"
+#export COMPILER_DATE="2023.05.23"
+#export COMPILER_DATE="2023.05.24"
+export COMPILER_DATE="2023.05.29"
 #export COMPILER_DATE="2023.03.10"
 #export COMPILER_DATE="2022.12.30.002"
 export AADEBUG=""
@@ -147,10 +155,21 @@ module load nightly-compiler/${COMPILER_DATE}
 #UMD="neo/agama-devel-sp3/627-23.13.26032.8-626"
 #UMD="neo/agama-devel-sp3/636-23.13.26032.22-631"
 #UMD="neo/agama-devel-sp3/637-23.13.26032.26-637"
-
+#UMD="neo/agama-devel-sp3/639-23.13.26032.26-637"
+#UMD="neo/agama-devel-sp3/644-23.13.26032.30-644"
+#UMD="neo/agama-devel-sp3/646-23.13.26032.30-646"
+#UMD="neo/agama-devel-sp3/648-23.17.26241.13-648"
+#UMD="neo/agama-devel-sp3/650-23.17.26241.13-649"
+#UMD="neo/agama-devel-sp3/651-23.17.26241.14-651"
+#UMD="neo/agama-devel-sp3/652-23.17.26241.14-651"
+#UMD="neo/agama-devel-sp3/653-23.17.26241.15-653"
 #UMD="intel_compute_runtime/release/agama-devel-602"
-UMD="neo/agama-devel-sp3/639-23.13.26032.26-637"
+
+
+#UMD="neo/agama-devel-sp3/627-23.13.26032.8-626"
+UMD="neo/agama-devel-sp3/657-23.17.26241.18-657"
 umdf=""
+export useAGRF="FALSE"
 if [[ -n $UMD ]]; then
    module switch -f intel_compute_runtime/release/agama-devel-551 $UMD
    if [[ $UMD == intel_compute* ]]; then
@@ -165,10 +184,8 @@ if [[ -n $UMD ]]; then
 fi
 
 #if action is empty, performance comparison will be done. otherwise there is no performance comparison and just run the app using such as onetrace, vtune etc. so action can be "", "onetrace", "iprof", "vtune", 
-opLevels=(O3)
-grids=("[8,8,8]" "[16,16,16]")
-gridNames=("" "-xN16")
 
+#opLevels=(O3)
 #grids=("[8,8,8]")
 #gridNames=("")
 #appNames=(ApplicationDriver)
@@ -177,13 +194,19 @@ gridNames=("" "-xN16")
 #userOptions=("")
 #gridLines=(85)
 
+#opLevels=(O3)
+#grids=("[8,8,8]")
+#gridNames=("")
 #appNames=(ApplicationDriver_Neutrinos)
 #logFiles=(relax)
 #CaseNames=(Relaxation)
 #userOptions=("MICROPHYSICS=WEAKLIB")
 #gridLines=(127)
 
-##opLevels=(O0 O1 O2 O3)
+opLevels=(O0 O1 O2 O3)
+opLevels=(O3)
+grids=("[8,8,8]" "[16,16,16]")
+gridNames=("" "-xN16")
 appNames=(ApplicationDriver ApplicationDriver_Neutrinos)
 logFiles=(sineWave relax)
 CaseNames=(SineWaveStreaming Relaxation)
@@ -194,11 +217,12 @@ if [[ "$ACTION" == "vtune" ]]; then
    opLevels=(O3)
    grids=("[8,8,8]")
    gridNames=("")
-   appNames=(ApplicationDriver ApplicationDriver_Neutrinos)
-   logFiles=(sineWave relax)
-   CaseNames=(SineWaveStreaming Relaxation)
-   userOptions=("" "MICROPHYSICS=WEAKLIB")
-   gridLines=(85 127)
+   appNames=(ApplicationDriver)
+   logFiles=(sineWave)
+   CaseNames=(SineWaveStreaming)
+   userOptions=("")
+   gridLines=(85)
+
 fi
 
 set_common
@@ -214,14 +238,20 @@ fi
 for ((jj=0; jj<${#appNames[@]}; jj++));
 do
    export APP_NAME=${appNames[jj]}
-   for ((ii=0; ii<${#grids[@]}; ii++)); do
+   for ((ii=0; ii<${#grids[@]}; ii++));
+   do
 
       sed -i "${gridLines[jj]}s/.*/      nX  =${grids[ii]}/" ../${appNames[jj]}.F90
-      for op in "${opLevels[@]}"
+      for op in "${opLevels[@]}";
       do 
+         if [[ "$op" == "O0" && "${grids[ii]}" == "[16,16,16]" ]];then
+            continue
+         fi
+
          export OP_LEVEL=$op
          export LOG_FILE=${logFiles[jj]}.${OP_LEVEL}.${COMPILER_DATE}.ms69${umdf}${gridNames[ii]}${faction}$AADEBUG
-         export LOG_BASE=${logFiles[jj]}.${OP_LEVEL}.${BASE_DATE}.ms69-umd602${gridNames[ii]}$AADEBUG
+#         export LOG_BASE=${logFiles[jj]}.${OP_LEVEL}.${BASE_DATE}.ms69-umd602${gridNames[ii]}$AADEBUG
+         export LOG_BASE=${logFiles[jj]}.${OP_LEVEL}.${BASE_DATE}.ms69-devel602${gridNames[ii]}$AADEBUG
          #export LOG_BASE=${logFiles[jj]}.${OP_LEVEL}.${BASE_DATE}.ms69${umdf}${gridNames[ii]}$AADEBUG
          export USER_OPTION=${userOptions[jj]}
 
@@ -244,6 +274,7 @@ do
                echo "Runing ${CaseNames[jj]} ..."
                echo ""
                if [ -f "${APP_NAME}_${THORNADO_MACHINE}" ];then
+                  echo "$op ${grids[ii]} ${appNames[jj]}"
                   runApp
                else
                   echo "The executable does not exist", ${APP_NAME}_${THORNADO_MACHINE}
@@ -261,6 +292,7 @@ do
                echo ""
                buildApp
                if [ -f "${APP_NAME}_${THORNADO_MACHINE}" ];then
+                  echo "$op ${grids[ii]} ${appNames[jj]}"
                   runApp
                else
                   echo "The executable does not exist", ${APP_NAME}_${THORNADO_MACHINE}

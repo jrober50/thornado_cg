@@ -13,7 +13,8 @@ MODULE AverageDownModule
     amrex_ref_ratio
 #if defined( THORNADO_USE_MESHREFINEMENT )
   USE amrex_multifabutil_module, ONLY: &
-    amrex_average_down_dg
+    amrex_average_down_dg, &
+    amrex_average_down_cg
 #endif
   USE amrex_parallel_module, ONLY: &
     amrex_parallel_communicator, &
@@ -27,7 +28,6 @@ MODULE AverageDownModule
   USE MF_Euler_PositivityLimiterModule, ONLY: &
     ApplyPositivityLimiter_Euler_MF
   USE InputParsingModule, ONLY: &
-    nLevels, &
     swX, &
     DEBUG
   USE MF_TimersModule, ONLY: &
@@ -143,10 +143,14 @@ CONTAINS
 
 #if defined( THORNADO_USE_MESHREFINEMENT )
 
-    CALL amrex_average_down_dg &
+    CALL amrex_average_down_cg &
            ( MF_uGF    (CoarseLevel+1), MF_uGF    (CoarseLevel), &
              amrex_geom(CoarseLevel+1), amrex_geom(CoarseLevel), &
              1, nComp, amrex_ref_ratio(CoarseLevel))
+!    CALL amrex_average_down_dg &
+!           ( MF_uGF    (CoarseLevel+1), MF_uGF    (CoarseLevel), &
+!             amrex_geom(CoarseLevel+1), amrex_geom(CoarseLevel), &
+!             1, nComp, amrex_ref_ratio(CoarseLevel))
 
 #endif
 
@@ -250,3 +254,4 @@ CONTAINS
 
 
 END MODULE AverageDownModule
+

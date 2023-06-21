@@ -18,7 +18,8 @@ MODULE FillPatchModule
     amrex_ref_ratio
 #if defined( THORNADO_USE_MESHREFINEMENT )
   USE amrex_amr_module, ONLY: &
-    amrex_interp_dg
+    amrex_interp_dg, &
+    amrex_interp_cg
 #endif
   USE amrex_fillpatch_module, ONLY: &
     amrex_fillpatch, &
@@ -50,7 +51,6 @@ MODULE FillPatchModule
   USE MF_UtilitiesModule, ONLY: &
     MultiplyWithMetric
   USE InputParsingModule, ONLY: &
-    nLevels, &
     UseTiling, &
     t_old, &
     t_new, &
@@ -123,7 +123,8 @@ CONTAINS
 
     END IF
 
-    CALL FillPatch_Scalar( FineLevel, MF_uGF, MF_dst )
+    CALL FillPatch_Scalar( FineLevel, MF_uGF, MF_dst, amrex_interp_cg )
+!    CALL FillPatch_Scalar( FineLevel, MF_uGF, MF_dst, amrex_interp_dg )
 
     IF( FineLevel .GT. 0 )THEN
 
@@ -208,7 +209,7 @@ CONTAINS
 
     END IF
 
-    CALL FillPatch_Scalar( FineLevel, MF_src, MF_dst )
+    CALL FillPatch_Scalar( FineLevel, MF_src, MF_dst, amrex_interp_dg )
 
     IF( FineLevel .GT. 0 )THEN
 
@@ -266,7 +267,8 @@ CONTAINS
 
     END IF
 
-    CALL FillPatch_Vector( FineLevel, MF_uGF )
+    CALL FillPatch_Vector( FineLevel, MF_uGF, amrex_interp_cg )
+!    CALL FillPatch_Vector( FineLevel, MF_uGF, amrex_interp_dg )
 
     IF( FineLevel .GT. 0 )THEN
 
@@ -345,7 +347,7 @@ CONTAINS
 
     END IF
 
-    CALL FillPatch_Vector( FineLevel, MF )
+    CALL FillPatch_Vector( FineLevel, MF, amrex_interp_dg )
 
     IF( FineLevel .GT. 0 )THEN
 
@@ -395,7 +397,8 @@ CONTAINS
       CALL MultiplyWithMetric &
              ( FineLevel-1, MF_uGF, nF, +1, swXX_Option = swXX )
 
-    CALL FillCoarsePatch_Vector( FineLevel, MF_uGF )
+    CALL FillCoarsePatch_Vector( FineLevel, MF_uGF, amrex_interp_cg )
+!    CALL FillCoarsePatch_Vector( FineLevel, MF_uGF, amrex_interp_dg )
 
     IF( FineLevel .GT. 0 )THEN
 
@@ -461,7 +464,7 @@ CONTAINS
 
     END IF
 
-    CALL FillCoarsePatch_Vector( FineLevel, MF )
+    CALL FillCoarsePatch_Vector( FineLevel, MF, amrex_interp_dg )
 
     IF( FineLevel .GT. 0 )THEN
 
@@ -499,11 +502,12 @@ CONTAINS
   ! --- PRIVATE SUBROUTINES ---
 
 
-  SUBROUTINE FillPatch_Scalar( FineLevel, MF_src, MF_dst )
+  SUBROUTINE FillPatch_Scalar( FineLevel, MF_src, MF_dst, amrex_interp )
 
     INTEGER             , INTENT(in)    :: FineLevel
     TYPE(amrex_multifab), INTENT(in)    :: MF_src(0:)
     TYPE(amrex_multifab), INTENT(inout) :: MF_dst
+    INTEGER             , INTENT(in)    :: amrex_interp
 
     INTEGER, PARAMETER :: sComp = 1, dComp = 1
 
@@ -546,7 +550,7 @@ CONTAINS
                             amrex_geom(FineLevel  ), FillPhysicalBC_Dummy, &
                             t, sComp, dComp, MF_dst % nComp(), &
                             amrex_ref_ratio(FineLevel-1), &
-                            amrex_interp_dg, &
+                            amrex_interp, &
                             lo_bc, hi_bc )
 
       DEALLOCATE( hi_bc )
@@ -559,11 +563,12 @@ CONTAINS
   END SUBROUTINE FillPatch_Scalar
 
 
-  SUBROUTINE FillPatch_Vector( FineLevel, MF )
+  SUBROUTINE FillPatch_Vector( FineLevel, MF, amrex_interp )
 
     INTEGER             , INTENT(in)    :: FineLevel
     TYPE(amrex_multifab), INTENT(inout) :: MF(0:)
-
+    INTEGER             , INTENT(in)    :: amrex_interp
+    
     INTEGER, PARAMETER :: sComp = 1, dComp = 1
 
     INTEGER, ALLOCATABLE :: lo_bc(:,:), hi_bc(:,:)
@@ -605,7 +610,7 @@ CONTAINS
                             amrex_geom(FineLevel  ), FillPhysicalBC_Dummy, &
                             t, sComp, dComp, MF(FineLevel) % nComp(), &
                             amrex_ref_ratio(FineLevel-1), &
-                            amrex_interp_dg, &
+                            amrex_interp, &
                             lo_bc, hi_bc )
 
       DEALLOCATE( hi_bc )
@@ -618,10 +623,11 @@ CONTAINS
   END SUBROUTINE FillPatch_Vector
 
 
-  SUBROUTINE FillCoarsePatch_Vector( FineLevel, MF )
+  SUBROUTINE FillCoarsePatch_Vector( FineLevel, MF, amrex_interp )
 
     INTEGER             , INTENT(in)    :: FineLevel
     TYPE(amrex_multifab), INTENT(inout) :: MF(0:)
+    INTEGER             , INTENT(in)    :: amrex_interp
 
     INTEGER, PARAMETER :: sComp = 1, dComp = 1
 
@@ -651,7 +657,7 @@ CONTAINS
              amrex_geom(FineLevel  ), FillPhysicalBC_Dummy, &
              t, sComp, dComp, MF(FineLevel) % nComp(), &
              amrex_ref_ratio(FineLevel-1), &
-             amrex_interp_dg, lo_bc, hi_bc )
+             amrex_interp, lo_bc, hi_bc )
 
     DEALLOCATE( hi_bc )
     DEALLOCATE( lo_bc )
@@ -725,3 +731,4 @@ CONTAINS
 
 
 END MODULE FillPatchModule
+

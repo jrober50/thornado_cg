@@ -50,6 +50,7 @@ amr.max_level               = 6
 amr.UseFluxCorrection_Euler = 0
 amr.UseAMR                  = 0
 amr.TagCriteria             = 1.0e4 5.0e3 1.0e3 5.0e2 2.5e2 1.0e2
+
 amr.n_error_buf             = 0
 amr.ref_ratio               = 2
 

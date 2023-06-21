@@ -1,4 +1,4 @@
-##### YahilCollapse_XCFC #####
+ ##### YahilCollapse_XCFC #####
 
 # For all LOGICAL types, use 0 for .FALSE. and 1 for .TRUE.
 # For all REAL types, use "e" and not "d", i.e. 1.0e3
@@ -42,14 +42,15 @@ geometry.coord_sys = 2
 geometry.prob_lo   = 000.0 0.0               0.0
 geometry.prob_hi   = 1.0e5 3.1415926535897931 6.2831853071795862
 
-amr.n_cell                  = 8192 01 01
+amr.n_cell                  = 512 01 01
 thornado.swX                = 01  00 00
 #amr.max_grid_size_x         = 512
 #amr.blocking_factor_x       = 512
-amr.max_level               = 0
+amr.max_level               = 6
 amr.UseFluxCorrection_Euler = 0
 amr.UseAMR                  = 0
-amr.TagCriteria             = 0.0
+amr.TagCriteria             = 1.0e4 5.0e3 1.0e3 5.0e2 2.5e2 1.0e2
+
 amr.n_error_buf             = 0
 amr.ref_ratio               = 2
 

@@ -1,32 +1,28 @@
-##### YahilCollapse_XCFC #####
+##### AdiabaticCollapse_XCFC #####
 
 # For all LOGICAL types, use 0 for .FALSE. and 1 for .TRUE.
 # For all REAL types, use "e" and not "d", i.e. 1.0e3
 
 debug.DEBUG = 0
 
-thornado.ProgramName = "YahilCollapse_XCFC"
+thornado.ProgramName = "AdiabaticCollapse_XCFC"
+
+AC.ProgenitorFileName = "../../Progenitors/WH07_15M_Sun.h5"
 
 thornado.UseXCFC = 1
-
-YC.D0              = 1.75
-YC.CentralDensity  = 7.0e9 # g/cm^3
-YC.CentralPressure = 6.0e27 # erg/cm^3
-YC.CoreRadius      = 1.0e5 # km
-YC.CollapseTime    = 1.50e2 # ms
 
 thornado.iRestart = -1
 
 thornado.UsePhysicalUnits = 1
 
-thornado.PlotFileBaseName = "YahilCollapse_XCFC.plt"
+thornado.PlotFileBaseName = "AdiabaticCollapse_XCFC.plt"
 thornado.t_end   = 3.0e+2
 thornado.iCycleD = 1
 
 thornado.dt_wrt  = 1.0e+0
 thornado.iCycleW = -1
 
-thornado.CheckpointFileBaseName = "YahilCollapse_XCFC.chk"
+thornado.CheckpointFileBaseName = "AdiabaticCollapse_XCFC.chk"
 thornado.dt_chk    = 1.0e+1
 thornado.iCycleChk = -1
 
@@ -40,16 +36,16 @@ geometry.is_periodic = 0  1  1
 
 geometry.coord_sys = 2
 geometry.prob_lo   = 000.0 0.0               0.0
-geometry.prob_hi   = 1.0e5 3.1415926535897931 6.2831853071795862
+geometry.prob_hi   = 8000.0 3.1415926535897931 6.2831853071795862
 
-amr.n_cell                  = 8192 01 01
+amr.n_cell                  = 512 01 01
 thornado.swX                = 01  00 00
-#amr.max_grid_size_x         = 512
-#amr.blocking_factor_x       = 512
-amr.max_level               = 0
-amr.UseFluxCorrection_Euler = 0
+#amr.max_grid_size_x         = 128
+#amr.blocking_factor_x       = 128
+amr.max_level               = 9
+amr.UseFluxCorrection_Euler = 1
 amr.UseAMR                  = 0
-amr.TagCriteria             = 0.0
+amr.TagCriteria             = 4.0e3 2.0e3 1.0e3 5.0e2 2.5e2 1.25e2 6.25E1 3.125E1 1.5625E1
 amr.n_error_buf             = 0
 amr.ref_ratio               = 2
 
@@ -59,6 +55,7 @@ poseidon.l_limit           = 0
 poseidon.max_fp_iters      = 20
 poseidon.anderson_m        = 3
 poseidon.converge_criteria = 1.0e-08
+poseidon.FillGhostCells    = 0
 
 # Slope limiter parameters
 SL.UseSlopeLimiter_Euler           = 1
@@ -77,7 +74,8 @@ PL.Min_1_Euler                = 1.0e-13
 PL.Min_2_Euler                = 1.0e-13
 
 # Equation of state parameters
-EoS.Gamma_IDEAL = 1.30
+EoS.EquationOfState = "TABLE"
+EoS.EosTableName = "../../EosTables/wl-EOS-SFHo-25-50-100.h5"
 
-# Time-Stepping parameters
+# Time-Stepper parameters
 TS.EvolveGravity = 1

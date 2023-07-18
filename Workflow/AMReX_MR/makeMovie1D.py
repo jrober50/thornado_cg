@@ -20,10 +20,14 @@ Usage:
 #### ========== User Input ==========
 
 # ID to be used for naming purposes
-ID = 'Advection1D'
+ID = 'YahilCollapse_XCFC'
 
 # Directory containing AMReX plotfiles
-plotfileDirectory = 'thornado/SandBox/AMReX/'
+#plotfileDirectory = 'thornado/SandBox/AMReX/'
+#plotfileDirectory = '/Users/nickroberts/thornado/SandBox/AMReX/Applications/YahilCollapse_XCFC/Data_9Lvls_512/'
+
+plotfileDirectory = '/Users/nickroberts/thornado_cg/SandBox/AMReX/Applications/YahilCollapse_XCFC/data_9lvls_512_shift/'
+
 #plotfileDirectory \
 #  = '/home/kkadoogan/Work/Codes/thornado/\
 #SandBox/AMReX/Euler_Relativistic_IDEAL_MR/'
@@ -32,20 +36,22 @@ plotfileDirectory = 'thornado/SandBox/AMReX/'
 plotfileBaseName = ID + '.plt'
 
 # Field to plot
-Field = 'PF_D'
+Field = 'PolytropicConstant'
+#Field = 'AF_P'
+
 
 # Plot data in log10-scale?
-UseLogScale_Y = False
-UseLogScale_X = False
+UseLogScale_Y = True
+UseLogScale_X = True
 
 # Unit system of the data
-UsePhysicalUnits = False
+UsePhysicalUnits = True
 
 # Coordinate system (currently supports 'cartesian' and 'spherical' )
 CoordinateSystem = 'cartesian'
 
 # Only use every <plotEvery> plotfile
-plotEvery = 1
+plotEvery = 5
 
 # First and last snapshots and number of snapshots to include in movie
 SSi = -1 # -1 -> SSi = 0
@@ -58,13 +64,18 @@ MaxLevel = -1
 # Include initial conditions in movie?
 ShowIC = True
 
-PlotMesh = True
+PlotMesh = False
 
 Verbose = True
 
-UseCustomLimits = False
-vmin = 0.0
-vmax = 2.0
+UseCustomLimits = True
+vmin = 9.539e14
+vmax = 9.54e14
+
+ShowRefinement = True
+RefinementLocations = [ 5.0e+4, 2.5E+4, 1.25E+4, 6.25E+3, 3.125E+3, \
+                        1.5625E+3, 7.8125E+2, 3.90625E+2, 1.953125E+2 ]
+
 
 MovieRunTime = 10.0 # seconds
 
@@ -130,7 +141,7 @@ xH = X1_C0[-1] + 0.5 * dX10[-1]
 
 fig = plt.figure()
 ax  = fig.add_subplot( 111 )
-ax.set_title( r'$\texttt{{{:}}}$'.format( ID ), fontsize = 15 )
+ax.set_title( r'$\texttt{{{:}}}$'.format( ID ) + ' - CG Interpolation', fontsize = 15 )
 
 time_text = ax.text( 0.1, 0.9, '', transform = ax.transAxes, fontsize = 13 )
 
@@ -148,10 +159,19 @@ if UseLogScale_X:
     ax.set_xlim( xL, xH )
     ax.set_xscale( 'log' )
 
-if PlotMesh: mesh, = ax.plot( [],[], 'b.', label = 'mesh boundaries'    )
-if ShowIC: IC,     = ax.plot( [],[], 'r.', label = r'$u\left(0\right)$' )
-line,              = ax.plot( [],[], 'k.', label = r'$u\left(t\right)$' )
-
+if PlotMesh: mesh, = ax.plot( [],[], 'b-', label = 'mesh boundaries'    )
+if ShowIC: IC,     = ax.plot( [],[], 'r-', label = r'$u\left(0\right)$' )
+line,              = ax.plot( [],[], 'k-', label = r'$u\left(t\right)$' )
+if ShowRefinement:
+    bottom, top = plt.ylim()
+    ax.plot( (RefinementLocations[:], RefinementLocations[:]), \
+             (top, bottom),     \
+             scaley = False,    \
+             color  = 'red',    \
+             zorder = 0,        \
+             alpha  = 0.4       )
+                 
+                 
 def InitializeFrame():
 
     line.set_data([],[])
@@ -189,7 +209,7 @@ def UpdateFrame( t ):
 
 ax.set_ylim( vmin, vmax )
 ax.legend( prop = {'size':12} )
-
+ax.grid(which='both')
 anim = animation.FuncAnimation( fig, UpdateFrame, \
                                 init_func = InitializeFrame, \
                                 frames = nSS, \

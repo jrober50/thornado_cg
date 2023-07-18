@@ -4,8 +4,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from os.path import isfile
 
-Root = '/home/kkadoogan/Work/Codes/thornado/'
-Root += 'SandBox/AMReX/Euler_Relativistic_IDEAL_MR/'
+Root = '/Users/nickroberts/thornado/'
+Root += 'SandBox/AMReX/Applications/AdiabaticCollapse_XCFC/'
 
 nF = 2 # 0: fluid; 1: SqrtGm
 Grid = np.array( [ 'UniGrid', 'MultiGrid' ], str)

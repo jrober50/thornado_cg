@@ -24,13 +24,13 @@ Alernate usage, plot specific file in PlotfileDirectory:
 #### ========== User Input ==========
 
 # Specify name of problem
-ProblemName = 'Advection2D'
+ProblemName = 'YahilCollapse_XCFC'
 
 # Specify title of figure
 FigTitle = ProblemName
 
 # Specify directory containing amrex Plotfiles
-PlotfileDirectory = 'thornado/SandBox/AMReX/'
+PlotfileDirectory = '/Users/nickroberts/thornado/SandBox/AMReX/Applications/YahilCollapse_XCFC/Data_9Lvls_512/'
 #PlotfileDirectory \
 #  = '/home/kkadoogan/Work/Codes/\
 #thornado/SandBox/AMReX/Euler_Relativistic_IDEAL_MR/'
@@ -39,11 +39,11 @@ PlotfileDirectory = 'thornado/SandBox/AMReX/'
 PlotfileBaseName = ProblemName + '.plt'
 
 # Specify field to plot
-Field = 'PF_D'
+Field = 'AF_P'
 
 # Specify to plot in log-scale
-UseLogScale_X  = False
-UseLogScale_Y  = False
+UseLogScale_X  = True
+UseLogScale_Y  = True
 UseLogScale_2D = False
 
 # Specify whether or not to use physical units
@@ -62,6 +62,10 @@ Verbose = True
 UseCustomLimits = False
 vmin = 0.0
 vmax = 2.0
+
+ShowRefinement = True
+RefinementLocations = [ 5.0e+4, 2.5E+4, 1.25E+4, 6.25E+3, 3.125E+3, \
+                        1.5625E+3, 7.8125E+2, 3.90625E+2, 1.953125E+2 ]
 
 # Save figure (True) or plot figure (False)
 SaveFig = False
@@ -122,6 +126,15 @@ if nDims == 1:
         xL = [ max( xL[0], 0.0 + 0.25 * dX1[0] ), 0 ]
     if UseLogScale_Y: ax.set_yscale( 'log' )
     if UseCustomLimits: ax.set_ylim( vmin, vmax )
+    if ShowRefinement:
+        bottom, top = plt.ylim()
+        ax.plot( (RefinementLocations[:], RefinementLocations[:]), \
+                 (top, bottom),     \
+                 scaley = False,    \
+                 color  = 'red',    \
+                 zorder = 0,        \
+                 alpha  = 0.4       )
+
     ax.set_xlim( xL[0], xH[0] )
     ax.set_xlabel \
       ( r'$x^{{1}}\ \left[\mathrm{{{:}}}\right]$'.format( X1Units ), \

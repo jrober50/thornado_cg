@@ -12,7 +12,6 @@ from Utilities.Files        import GetFileNumberArray
 from Utilities.YahilProfile import LoadYahilProfile, GetYahilValues
 from Utilities.GetPlotData  import GetPlotData
 
-
 time = 51.0 # s
 
 gamma = 1.3
@@ -33,6 +32,7 @@ FigTitle = ProblemName
 # Specify directory containing amrex Plotfiles
 PlotDirectory = '/Users/nickroberts/thornado/SandBox/AMReX/Applications/YahilCollapse_XCFC/Data_9Lvls_512/'
 
+
 # Specify plot file base name
 PlotBaseName = ProblemName + '.plt'
 
@@ -42,7 +42,7 @@ UseLogScale_Y  = True
 UseLogScale_2D = False
 
 # Specify whether or not to use physical units
-UsePhysicalUnits = True
+UsePhysicalUnits = False
 
 # Specify coordinate system (currently supports 'cartesian' and 'spherical')
 CoordinateSystem = 'cartesian'
@@ -86,11 +86,13 @@ if not PlotDirectory[-1] == '/': PlotDirectory += '/'
 
 plotfileArray = GetFileNumberArray( PlotDirectory,  \
                                     PlotBaseName    )
-                                    
+
 gvU.SetSpaceTimeUnits(CoordinateSystem, UsePhysicalUnits)
 
+NumFigCols = 2
+NumFigRows = 2
 
-fig, ax = plt.subplots( 2, 1 )
+fig, ax = plt.subplots( NumFigRows, NumFigCols )
 
 N = plotfileArray.shape[0]
 
@@ -106,12 +108,11 @@ pfa = np.array( [ plotfileArray[972], \
                   plotfileArray[1467] ] )
 
                   
+print(pfa)
 #pfa = plotfileArray[::100]
 #pfa = np.hstack( (pfa,plotfileArray[-1]) )
 
 #pfa = np.array( plotfileArray )
-
-
 
 
 YahilProfile = LoadYahilProfile( YahilFile )
@@ -138,81 +139,53 @@ for i in range(pfa.shape[0] ):
     Yahil_Density, Yahil_Velocity = GetYahilValues( X1_C, kappa, gamma, Time, YahilProfile)
 
 
-
-
     nX = ['None']*3
     # Re-define nX
     nX[0] = X1_C.shape[0]
     nX[1] = X2_C.shape[0]
     nX[2] = X2_C.shape[0]
-    
+
     nDims = 1
     if nX[1] > 1: nDims += 1
     if nX[2] > 1: nDims += 1
 
-#    wbscale = ((i+1)/pfa.shape[0],(i+1)/pfa.shape[0],(i+1)/pfa.shape[0])
-    alphascale = (i+1)*0.15
-    
 
-    ax[0].plot( X1_C, \
-                ThorDen,         \
-                '-',             \
-                color='red',     \
-                alpha=alphascale,\
-                label=r'thornado, $t={:.2f}$ ms'.format(Time) )
-                
-    ax[0].plot( X1_C, \
-                Yahil_Density,   \
-                '-',             \
-                color='blue',    \
-                alpha=alphascale,\
-                label=r'profile, $\> \> \, \ \ t={:.2f}$ ms'.format(Time) )
-                
-    ax[1].plot( X1_C, \
-                ThorVel,         \
-                '-',             \
-                color='red',     \
-                alpha=alphascale,\
-                label=r'thornado, $t={:.2f}$ ms'.format(Time) )
-                
-    ax[1].plot( X1_C,   \
-                Yahil_Velocity,  \
-                '-',             \
-                color='blue',    \
-                alpha=alphascale,\
-                label=r'profile,  $t={:.2f}$ ms'.format(Time) )
+
+    ax[0][0].plot( X1_C, ThorDen, 'r-',label=r'thornado, $t={:f}$'.format(Time) )
+    ax[0][1].plot( X1_C, Yahil_Density, 'b--',label=r'profile, $t={:f}$'.format(Time) )
+    ax[1][0].plot( X1_C, ThorVel, 'r-',label=r'thornado, $t={:f}$'.format(Time)  )
+    ax[1][1].plot( X1_C, Yahil_Velocity, 'b--',label=r'profile, $t={:f}$'.format(Time) )
 
 
 
 
 if UseLogScale_X:
-    ax[0].set_xscale( 'log' )
-    ax[1].set_xscale( 'log' )
+    for i in range(NumFigRows):
+        for j in range(NumFigCols):
+            ax[i][j].set_xscale( 'log' )
     xL = [ max( xL[0], 0.0 + 0.25 * dX1[0] ), 0 ]
 if UseLogScale_Y:
-    ax[0].set_yscale( 'log' )
+    for j in range(NumFigCols):
+            ax[0][i].set_xscale( 'log' )
 if UseCustomLimits:
-    ax[0].set_ylim( vmin, vmax )
-    ax[1].set_ylim( vmin, vmax )
-ax[0].set_xlim( xL[0], xH[0] )
-ax[1].set_xlim( xL[0], xH[0] )
-ax[0].set_xlabel \
-  ( r'$x^{{1}}\ \left[\mathrm{{{:}}}\right]$'.format( gvU.X1Units ), \
-    fontsize = 15 )
-ax[1].set_xlabel \
-  ( r'$x^{{1}}\ \left[\mathrm{{{:}}}\right]$'.format( gvU.X1Units ), \
-    fontsize = 15 )
-ax[0].set_ylabel( FieldA + ' ' + r'$\mathrm{{{:}}}$'.format(ThorDenUnits) )
-ax[1].set_ylabel( FieldB + ' ' + r'$\mathrm{{{:}}}$'.format(ThorVelUnits) )
+    for i in range(NumFigRows):
+        for j in range(NumFigCols):
+            ax[i][j].set_ylim( vmin, vmax )
+            ax[i][j].set_xlim( xL[0], xH[0] )
+            ax[i][j].set_xlabel \
+              ( r'$x^{{1}}\ \left[\mathrm{{{:}}}\right]$'.format( X1Units ), \
+                fontsize = 15 )
+            ax[i][j].grid()
+    
+    for i in range(NumFigRows):
+        ax[i][0].set_ylabel( FieldA + ' ' + DataUnitA )
+        ax[i][1].set_ylabel( FieldB + ' ' + DataUnitB )
+
+#ax[0].legend()
 
 
-ax[0].grid()
-ax[1].grid()
 
-ax[0].legend(loc = 'upper right')
-
-
-ax[0].set_title( r'$\texttt{{{:}}}$'.format( FigTitle ) )
+#ax[0].set_title( r'$\texttt{{{:}}}$'.format( FigTitle ) )
 
 if SaveFig:
 
@@ -226,7 +199,6 @@ plt.close()
 
 import os
 os.system( 'rm -rf __pycache__ ' )
-
 
 
 

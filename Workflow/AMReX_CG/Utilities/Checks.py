@@ -1,7 +1,13 @@
 #!/usr/bin/env python3
 
-import GlobalVariables_Settings as gvS
+import GlobalVariables.Settings as gvS
 
+
+ #=============================================#
+#                                               #
+#   CoordSystemCheck                            #
+#                                               #
+ #=============================================#
 def CoordSystemCheck():
 
     msg = 'Invalid choice of CoordinateSystem: {:s}'.format( gvS.CoordinateSystem )

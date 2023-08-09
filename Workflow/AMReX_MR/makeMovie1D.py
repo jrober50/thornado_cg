@@ -26,7 +26,8 @@ ID = 'YahilCollapse_XCFC'
 #plotfileDirectory = 'thornado/SandBox/AMReX/'
 #plotfileDirectory = '/Users/nickroberts/thornado/SandBox/AMReX/Applications/YahilCollapse_XCFC/Data_9Lvls_512/'
 
-plotfileDirectory = '/Users/nickroberts/thornado_cg/SandBox/AMReX/Applications/YahilCollapse_XCFC/data_9lvls_512_shift/'
+plotfileDirectory = '/Users/nickroberts/thornado/SandBox/AMReX/Applications/YahilCollapse_XCFC/Data_9Lvls_512/'
+
 
 #plotfileDirectory \
 #  = '/home/kkadoogan/Work/Codes/thornado/\
@@ -36,7 +37,7 @@ plotfileDirectory = '/Users/nickroberts/thornado_cg/SandBox/AMReX/Applications/Y
 plotfileBaseName = ID + '.plt'
 
 # Field to plot
-Field = 'PolytropicConstant'
+Field = 'PF_D'
 #Field = 'AF_P'
 
 
@@ -51,7 +52,7 @@ UsePhysicalUnits = True
 CoordinateSystem = 'cartesian'
 
 # Only use every <plotEvery> plotfile
-plotEvery = 5
+plotEvery = 20
 
 # First and last snapshots and number of snapshots to include in movie
 SSi = -1 # -1 -> SSi = 0
@@ -185,6 +186,8 @@ def InitializeFrame():
     else:                   ret = ( line, time_text )
 
     return ret
+
+
 
 def UpdateFrame( t ):
 

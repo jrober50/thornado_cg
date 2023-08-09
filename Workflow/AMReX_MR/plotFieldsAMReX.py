@@ -39,7 +39,7 @@ PlotfileDirectory = '/Users/nickroberts/thornado/SandBox/AMReX/Applications/Yahi
 PlotfileBaseName = ProblemName + '.plt'
 
 # Specify field to plot
-Field = 'AF_P'
+Field = 'PF_D'
 
 # Specify to plot in log-scale
 UseLogScale_X  = True

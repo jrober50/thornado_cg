@@ -48,11 +48,11 @@ if __name__ == "__main__":
     CoordinateSystem = 'spherical'
 
     # Only use every <plotEvery> plotfile
-    PlotEvery = 1
+    PlotEvery = 10
 
     # First and last snapshots and number of snapshots to include in movie
-    SSi = -1 # -1 -> SSi = 0
-    SSf = -1 # -1 -> plotfileArray.shape[0] - 1
+    SSi = 567 # -1 -> SSi = 0
+    SSf = 2262 # -1 -> plotfileArray.shape[0] - 1
     nSS = -1 # -1 -> plotfileArray.shape[0]
 
 
@@ -68,9 +68,9 @@ if __name__ == "__main__":
     gvS.Verbose = True
 
     # Use custom limts for y-axis (1D) or colorbar (2D)
-    gvS.UseCustomLimits = True
-    gvS.vmin = 1.0e-16
-    gvS.vmax = 1.0e-1
+    gvS.UseCustomLimits = False
+    gvS.vmin = 0.0
+    gvS.vmax = 1.0
 
     gvS.MovieRunTime = 10.0 # seconds
 
@@ -117,9 +117,6 @@ if __name__ == "__main__":
                               Field,           \
                               DataDirectoryA   )
 
-
-    SSi = 567 # -1 -> SSi = 0
-    SSf = 2262
     FileNumberArrayB = GetFileNumberArray( PlotDirectoryB,     \
                                            PlotBaseName,       \
                                            SSi, SSf,           \
@@ -138,7 +135,7 @@ if __name__ == "__main__":
     MakeMovie( [FileNumberArrayA, FileNumberArrayB], \
                [Field],                              \
                [DataDirectoryA, DataDirectoryB],     \
-               Action = 'RelDiff'    )
+               Action = 'None'    )
 
 
 

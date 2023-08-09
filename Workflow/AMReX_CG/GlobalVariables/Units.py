@@ -16,6 +16,14 @@ X3Units   = ''
 
 def SetSpaceTimeUnits(CoordinateSystem, UsePhysicalUnits):
 
+    global TimeUnits
+    global X1Units
+    global X2Units
+    global X3Units
+    TimeUnits = ''
+    X1Units   = ''
+    X2Units   = ''
+    X3Units   = ''
     if UsePhysicalUnits:
         TimeUnits = 'ms'
         if   CoordinateSystem == 'cartesian':

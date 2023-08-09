@@ -1,12 +1,27 @@
 #!/usr/bin/env python3
 
 import numpy as np
-import GlobalVariables_Settings as gvS
+import GlobalVariables.Settings as gvS
 from charade import detect
 
+#=============================================#
+#   Included Routines
+#
+#   GetFileNumberArray
+#   convert
+#   ChoosePlotFile
+#   Overwrite
+#   CheckForField
+#   CleanField
+#
+#=============================================#
 
 
-
+ #=============================================#
+#                                               #
+#   GetFileNumberArray                          #
+#                                               #
+ #=============================================#
 def GetFileNumberArray( PlotDirectory,      \
                         PlotBaseName,       \
                         SSi = -1,           \
@@ -26,7 +41,6 @@ def GetFileNumberArray( PlotDirectory,      \
     for iFile in range( fileArray.shape[0] ):
 
         sFile = fileArray[iFile]
-
         if( sFile[0:len(PlotBaseName)] == PlotBaseName \
               and sFile[len(PlotBaseName)+1].isdigit() ) :
             if sFile[-1] == '/' :
@@ -37,8 +51,10 @@ def GetFileNumberArray( PlotDirectory,      \
     fileNumbers = np.array( fileList )
     numNumbers = fileNumbers.shape[0]
 
-#    print( fileNumbers )
-
+    print( fileNumbers )
+    print( numNumbers )
+    
+    
     # Warn if list is empty.
     if not fileNumbers.shape[0] > 0:
 
@@ -61,7 +77,7 @@ def GetFileNumberArray( PlotDirectory,      \
     if SSi < 0: SSi = 0
     if SSf < 0: SSf = int(fileNumbers[-1])
     
-    
+    print(SSi,SSf)
     
     if SSf < SSi:
         msg = '\n>>> Final frame comes before initial frame. \n'
@@ -71,12 +87,13 @@ def GetFileNumberArray( PlotDirectory,      \
 
 
     for SSi_index in range( numNumbers ):
+        print( fileNumbers[SSi_index] )
         if ( fileNumbers[SSi_index] == SSi ): break
     
     for SSf_index in range( numNumbers-1, SSi_index-2,-1):
         if ( fileNumbers[SSf_index] == SSf ): break
     
-    if not SSi_index < numNumbers-1:
+    if not SSi_index <= numNumbers-1:
         msg = '\n>>> SSi does not correspond to a plot data directory.\n'
         assert( SSi_index < numNumbers-1 ), msg
     
@@ -104,8 +121,6 @@ def GetFileNumberArray( PlotDirectory,      \
     fileNumbersFiltered = np.array( fileNumbersLimited[::PlotEvery] )
 
 
-    nSS = fileNumbersFiltered.shape[0]
-
     return fileNumbersFiltered
 # END GetFileNumberArray
 
@@ -116,8 +131,11 @@ def GetFileNumberArray( PlotDirectory,      \
 
 
 
-
-
+ #=============================================#
+#                                               #
+#   convert                                     #
+#                                               #
+ #=============================================#
 def convert( s ):
 
     """from https://www.geeksforgeeks.org/python-character-encoding/"""
@@ -140,7 +158,11 @@ def convert( s ):
         
         
         
-        
+ #=============================================#
+#                                               #
+#   ChoosePlotFile                              #
+#                                               #
+ #=============================================#
 def ChoosePlotFile( FileNumberArray,                \
                     PlotFileBaseName = 'plt',       \
                     argv = [ 'a' ],                 \
@@ -152,7 +174,6 @@ def ChoosePlotFile( FileNumberArray,                \
         File = PlotFileBaseName + '{:}'.format( str(FileNumberArray[-1]).zfill(8) )
 
     elif len( argv ) == 2:
-
         if argv[1][0].isalpha():
 
             File = argv[1]
@@ -183,6 +204,12 @@ def ChoosePlotFile( FileNumberArray,                \
 
 
 
+
+ #=============================================#
+#                                               #
+#   Overwrite                                   #
+#                                               #
+ #=============================================#
 def Overwrite( FileOrDirName, ForceChoice = False, OW = False ):
 
     if ForceChoice: return OW
@@ -208,6 +235,14 @@ def Overwrite( FileOrDirName, ForceChoice = False, OW = False ):
     return OW
 
 
+
+
+
+ #=============================================#
+#                                               #
+#   CheckForField                               #
+#                                               #
+ #=============================================#
 def CheckForField(  Field,          \
                     DataDirectory,  \
                     FileNumberArray ):
@@ -229,7 +264,11 @@ def CheckForField(  Field,          \
 
 
 
-
+ #=============================================#
+#                                               #
+#   CleanField                                  #
+#                                               #
+ #=============================================#
 def CleanField( Field,          \
                 DataDirectory,  \
                 FileNumberArray ):

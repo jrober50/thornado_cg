@@ -9,7 +9,8 @@ plt.style.use( 'publication.sty' )
 import GlobalVariables.Settings as gvS
 import GlobalVariables.Units    as gvU
 
-from Utilities.GetPlotData  import GetPlotData
+from Utilities.GetPlotData              import GetPlotData
+from Utilities.RefinementBoundaryFinder import FindRefinementBoundaries
 
 """
 
@@ -34,20 +35,15 @@ ProblemName = 'YahilCollapse_XCFC'
 FigTitle = ProblemName
 
 # Specify directory containing amrex Plotfiles
-PlotDirectoryA = '/Users/nickroberts/thornado/SandBox/AMReX/Applications/YahilCollapse_XCFC/Data_9Lvls_512/'
-FrameNumberA = 0# -1  # -1 -> argv, or last frame
-
-
-PlotDirectoryB = '/Users/nickroberts/thornado/SandBox/AMReX/Applications/YahilCollapse_XCFC/Data_9Lvls_512/'
-FrameNumberB = 13 # -1 -> argv, or last frame
-
-
+#PlotDirectory = '/Users/nickroberts/thornado/SandBox/AMReX/Applications/YahilCollapse_XCFC/Data_9Lvls_512/'
+PlotDirectory = '/Users/nickroberts/thornado_cg/SandBox/AMReX/Applications/YahilCollapse_XCFC/'
 
 # Specify plot file base name
 PlotBaseName = ProblemName + '.plt'
 
 # Specify field to plot
-Field = 'PF_D'
+#Field = 'PF_D'
+Field = 'GF_Psi'
 
 # Specify to plot in log-scale
 UseLogScale_X  = True
@@ -72,7 +68,7 @@ vmin = 0.0
 vmax = 2.0
 
 ShowRefinement = True
-RefinementLocations = [ 5.0e+4, 2.5E+4, 1.25E+4, 6.25E+3, 3.125E+3, \
+RefinementLocations_Old = [ 5.0e+4, 2.5E+4, 1.25E+4, 6.25E+3, 3.125E+3, \
                         1.5625E+3, 7.8125E+2, 3.90625E+2, 1.953125E+2 ]
 
 # Save figure (True) or plot figure (False)
@@ -97,48 +93,31 @@ ID      = '{:s}_{:s}'.format( ProblemName, Field )
 FigName = 'fig.{:s}.png'.format( ID )
 
 # Append "/" to PlotDirectory, if not present
-if not PlotDirectoryA[-1] == '/': PlotDirectoryA += '/'
-if not PlotDirectoryB[-1] == '/': PlotDirectoryB += '/'
+if not PlotDirectory[-1] == '/': PlotDirectory += '/'
+
 
 
 gvU.SetSpaceTimeUnits(CoordinateSystem, UsePhysicalUnits)
 
-
-DataA, DataUnitA, TimeA,    \
-X1A, X2A, X3A,              \
-dX1A, dX2A, dX3A, xLA, xHA = GetPlotData( PlotDirectoryA,   \
-                                          PlotBaseName,     \
-                                          Field,            \
-                                          FrameNumberA,     \
-                                          argv,             \
-                                          Verbose           )
-
+Data, DataUnit, Time,   \
+X1_C, X2_C, X3_C,       \
+dX1, dX2, dX3, xL, xH = GetPlotData( PlotDirectory,     \
+                                     PlotBaseName,      \
+                                     Field,             \
+                                     argv = argv,       \
+                                     Verbose = Verbose  )
  
  
-DataB, DataUnitB, TimeB,    \
-X1B, X2B, X3B,              \
-dX1B, dX2B, dX3B, xLB, xHB = GetPlotData( PlotDirectoryB,   \
-                                          PlotBaseName,     \
-                                          Field,            \
-                                          FrameNumberB,     \
-                                          argv,             \
-                                          Verbose           )
- 
 
 
 
+nX1 = X1_C.shape[0]
+nX2 = X2_C.shape[0]
+nX3 = X3_C.shape[0]
 
 
+RefinementLocations = FindRefinementBoundaries( dX1 )
 
-if (any(X1A != X1B)):
-    msg = "\nRaidal meshes do not match. \n"
-    msg +=" Can not do a proper relative difference.\n"
-    exit(msg)
-
-
-nX1 = X1A.shape[0]
-nX2 = X2A.shape[0]
-nX3 = X3A.shape[0]
 
 
 nDims = 1
@@ -148,17 +127,13 @@ if nX3 > 1: nDims += 1
 if nDims == 1:
 
     fig, ax = plt.subplots( 1, 1 )
-    
-    
-    RelDiff = abs(DataA-DataB)/abs(DataA)
 
-    ax.plot( X1A, RelDiff, 'k.' )
+    ax.plot( X1_C, Data, 'k.' )
     
     
     if UseLogScale_X:
         ax.set_xscale( 'log' )
-        print(xLA[0], 0.0 + 0.25 * dX1A[0])
-        xLA = [ max( xLA[0], 0.0 + 0.25 * dX1A[0] ), 0 ]
+        xL = [ max( xL[0], 0.0 + 0.25 * dX1[0] ), 0 ]
         
     if UseLogScale_Y: ax.set_yscale( 'log' )
     
@@ -175,12 +150,12 @@ if nDims == 1:
 
 
 
-    ax.set_xlim( xLA[0], xHA[0] )
+    ax.set_xlim( xL[0], xH[0] )
     ax.set_xlabel \
       ( r'$x^{{1}}\ \left[\mathrm{{{:}}}\right]$'.format( gvU.X1Units ), \
         fontsize = 15 )
         
-    ax.set_ylabel( Field + ' ' + '$'+DataUnitA+'$' )
+    ax.set_ylabel( Field + ' ' + '$'+DataUnit+'$' )
     ax.grid()
 
 else:

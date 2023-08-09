@@ -96,6 +96,8 @@ PROGRAM main
     StepNo = StepNo + 1
 
     t_old = t_new
+    
+    CALL ReGrid
 
     CALL ComputeTimeStep_Euler_MF( MF_uGF, MF_uCF, CFL, dt )
 
@@ -294,7 +296,6 @@ CONTAINS
       CALL MPI_BARRIER( amrex_parallel_communicator(), iErr )
 
     END IF
-
     IF( UseAMR )THEN
 
       IF( MOD( StepNo(0), iReGrid ) .EQ. 0 )THEN

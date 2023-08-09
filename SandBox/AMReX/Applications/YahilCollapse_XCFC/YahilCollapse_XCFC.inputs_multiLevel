@@ -1,4 +1,4 @@
- ##### YahilCollapse_XCFC #####
+##### YahilCollapse_XCFC.inputs_multiLevel #####
 
 # For all LOGICAL types, use 0 for .FALSE. and 1 for .TRUE.
 # For all REAL types, use "e" and not "d", i.e. 1.0e3
@@ -23,11 +23,11 @@ thornado.PlotFileBaseName = "YahilCollapse_XCFC.plt"
 thornado.t_end   = 3.0e+2
 thornado.iCycleD = 1
 
-thornado.dt_wrt  = 1.0e+0
+thornado.dt_wrt  = 1.0e-1
 thornado.iCycleW = -1
 
 thornado.CheckpointFileBaseName = "YahilCollapse_XCFC.chk"
-thornado.dt_chk    = 1.0e+1
+thornado.dt_chk    = 1.0e+0
 thornado.iCycleChk = -1
 
 thornado.nNodes  = 2
@@ -50,7 +50,6 @@ amr.max_level               = 6
 amr.UseFluxCorrection_Euler = 0
 amr.UseAMR                  = 0
 amr.TagCriteria             = 1.0e4 5.0e3 1.0e3 5.0e2 2.5e2 1.0e2
-
 amr.n_error_buf             = 0
 amr.ref_ratio               = 2
 

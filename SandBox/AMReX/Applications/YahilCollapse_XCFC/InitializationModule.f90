@@ -496,7 +496,7 @@ CONTAINS
   SUBROUTINE ErrorEstimate( iLevel, cp, Time, SetTag, ClearTag ) BIND(c)
 
     USE TaggingModule, ONLY: &
-      TagElements, TagElements_Yahil1D
+      TagElements, TagElements_Density, TagElements_Max
 
     INTEGER,                INTENT(in), VALUE :: iLevel
     TYPE(c_ptr),            INTENT(in), VALUE :: cp
@@ -537,7 +537,7 @@ CONTAINS
       ! TagCriteria(iLevel+1) because iLevel starts at 0 but
       ! TagCriteria starts with 1
 
-      CALL TagElements_Yahil1D &
+      CALL TagElements_Density &
              ( iLevel, BX % lo, BX % hi, LBOUND( uCF ), UBOUND( uCF ), &
                uCF, TagCriteria(iLevel+1), SetTag, ClearTag, &
                LBOUND( TagArr ), UBOUND( TagArr ), TagArr )

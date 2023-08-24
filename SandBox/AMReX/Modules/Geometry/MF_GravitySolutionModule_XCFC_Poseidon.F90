@@ -2007,7 +2007,7 @@ CONTAINS
           uGF(iX1,iX2,iX3,nDOFX*(iGF_Gm_dd_33-1)+iNX) = MAX( h3**2, SqrtTiny )
 
           uGF(iX1,iX2,iX3,nDOFX*(iGF_SqrtGm-1)+iNX) = h1 * h2 * h3
-          PRINT*,uGF(iX1,iX2,iX3,nDOFX*(iGF_SqrtGm-1)+iNX), h1, h2, h3, iX1,inX
+!          PRINT*,uGF(iX1,iX2,iX3,nDOFX*(iGF_SqrtGm-1)+iNX), h1, h2, h3, iX1,inX
 
         END DO
         END DO

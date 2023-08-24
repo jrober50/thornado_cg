@@ -69,6 +69,9 @@ PROGRAM main
     TimersStop_AMReX, &
     Timer_AMReX_InputOutput, &
     FinalizeTimers_AMReX
+    
+  USE MF_GravitySolutionModule_XCFC_Poseidon, ONLY: &
+    UpdateGeometryFields_MF
 
   IMPLICIT NONE
 
@@ -99,6 +102,11 @@ PROGRAM main
     
     CALL ReGrid
 
+    CALL WriteFieldsAMReX_PlotFile &
+           ( t_new(0), StepNo+10, MF_uGF, &
+             MF_uGF_Option = MF_uGF, &
+             MF_uCF_Option = MF_uCF )
+
     CALL ComputeTimeStep_Euler_MF( MF_uGF, MF_uCF, CFL, dt )
 
     dt = MINVAL( dt )
@@ -124,8 +132,9 @@ PROGRAM main
 
     END IF
 
+    PRINT*,"Before UpdateFluid_SSPRK_MF"
     CALL UpdateFluid_SSPRK_MF
-
+    PRINT*,"After UpdateFluid_SSPRK_MF"
     IF( DEBUG )THEN
 
       CALL MPI_BARRIER( amrex_parallel_communicator(), iErr )
@@ -313,16 +322,19 @@ CONTAINS
           END IF
 
         END IF
-
+        print*,"Here"
         DO iLevel = 0, nLevels
-
+          PRINT*,"Before:",iLevel
           IF( iLevel .LT. nLevels-1 ) &
             CALL amrex_regrid( iLevel, t_new(iLevel) )
-
+          PRINT*,"After:",iLevel
         END DO
 
-        nLevels = amrex_get_numlevels()
-
+        PRINT*,"Before Test",nLevels,amrex_get_numlevels()
+        IF ( nLevels .NE. amrex_get_numlevels() ) THEN
+            nLevels = amrex_get_numlevels()
+            CALL UpdateGeometryFields_MF( MF_uGF )
+        END IF
         ! --- nLevels <= nMaxLevels; entire arrays t_old(0:nMaxLevels-1) and
         !     t_new(0:nMaxLevels-1) must have valid data ---
         t_old = t_old(0)

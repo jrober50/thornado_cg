@@ -16,7 +16,7 @@ LAPACK_LIB ?= $(LAPACK_HOME)/lib
 $(info $$LAPACK_LIB is [${LAPACK_LIB}])
 $(info $$HDF5_LIB is [${HDF5_LIB}])
 
-#DEBUG = TRUE
+DEBUG = TRUE
 
 USE_MPI = TRUE
 USE_OMP = FALSE

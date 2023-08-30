@@ -102,10 +102,10 @@ PROGRAM main
     
     CALL ReGrid
 
-    CALL WriteFieldsAMReX_PlotFile &
-           ( t_new(0), StepNo+10, MF_uGF, &
-             MF_uGF_Option = MF_uGF, &
-             MF_uCF_Option = MF_uCF )
+!    CALL WriteFieldsAMReX_PlotFile &
+!           ( t_new(0), StepNo+10, MF_uGF, &
+!             MF_uGF_Option = MF_uGF, &
+!             MF_uCF_Option = MF_uCF )
 
     CALL ComputeTimeStep_Euler_MF( MF_uGF, MF_uCF, CFL, dt )
 
@@ -132,9 +132,8 @@ PROGRAM main
 
     END IF
 
-    PRINT*,"Before UpdateFluid_SSPRK_MF"
     CALL UpdateFluid_SSPRK_MF
-    PRINT*,"After UpdateFluid_SSPRK_MF"
+
     IF( DEBUG )THEN
 
       CALL MPI_BARRIER( amrex_parallel_communicator(), iErr )
@@ -322,12 +321,12 @@ CONTAINS
           END IF
 
         END IF
-        print*,"Here"
-        DO iLevel = 0, nLevels
-          PRINT*,"Before:",iLevel
+!        print*,"Here"
+        DO iLevel = 0, 0 !
+          PRINT*,"Before regrid "
           IF( iLevel .LT. nLevels-1 ) &
             CALL amrex_regrid( iLevel, t_new(iLevel) )
-          PRINT*,"After:",iLevel
+          PRINT*,"After regrid"
         END DO
 
         PRINT*,"Before Test",nLevels,amrex_get_numlevels()

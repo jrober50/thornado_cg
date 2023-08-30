@@ -398,6 +398,15 @@ CONTAINS
     REAL(DP),    INTENT(in), VALUE :: Time
     TYPE(c_ptr), INTENT(in), VALUE :: pBA, pDM
 
+    TYPE(amrex_box)    :: BX
+    TYPE(amrex_mfiter) :: MFI
+    REAL(DP), CONTIGUOUS, POINTER :: uGF (:,:,:,:)
+    REAL(DP), CONTIGUOUS, POINTER :: uCF (:,:,:,:)
+    REAL(DP), CONTIGUOUS, POINTER :: uDF (:,:,:,:)
+    
+    INTEGER       :: iX_B0(3), iX_E0(3), iX_B1(3), iX_E1(3)
+    INTEGER       :: iX1
+
     TYPE(amrex_boxarray)  :: BA
     TYPE(amrex_distromap) :: DM
 
@@ -423,6 +432,36 @@ CONTAINS
     CALL FillCoarsePatch( iLevel, MF_uGF, MF_uGF )
     CALL FillCoarsePatch( iLevel, MF_uGF, MF_uCF )
     CALL FillCoarsePatch( iLevel, MF_uGF, MF_uDF )
+
+    CALL amrex_mfiter_build( MFI, MF_uGF(iLevel), tiling = UseTiling )
+
+    DO WHILE( MFI % next() )
+
+        uGF => MF_uGF(iLevel) % DataPtr( MFI )
+        uCF => MF_uCF(iLevel) % DataPtr( MFI )
+        uDF => MF_uDF(iLevel) % DataPtr( MFI )
+
+
+        BX = MFI % tilebox()
+
+        iX_B0 = BX % lo
+        iX_E0 = BX % hi
+        iX_B1 = BX % lo - swX
+        iX_E1 = BX % hi + swX
+
+        DO iX1 = iX_B1(1), iX_E1(1)
+            IF ( iX1 == -1 ) THEN
+
+                uCF(iX1,iX_B1(2),iX_B1(3),1:nDOFX)  &
+                    = uCF(iX1+1,iX_B1(2),iX_B1(3),1:nDOFX)
+
+                uDF(iX1,iX_B1(2),iX_B1(3),1:nDOFX)  &
+                    = uDF(iX1+1,iX_B1(2),iX_B1(3),1:nDOFX)
+
+            end IF
+        END DO
+    END DO
+
 
   END SUBROUTINE MakeNewLevelFromCoarse
 
@@ -454,6 +493,15 @@ CONTAINS
     TYPE(amrex_multifab)  :: MF_uGF_tmp, MF_uCF_tmp, MF_uPF_tmp, &
                              MF_uAF_tmp, MF_uDF_tmp
 
+    TYPE(amrex_box)    :: BX
+    TYPE(amrex_mfiter) :: MFI
+    REAL(DP), CONTIGUOUS, POINTER :: uGF (:,:,:,:)
+    REAL(DP), CONTIGUOUS, POINTER :: uCF (:,:,:,:)
+    REAL(DP), CONTIGUOUS, POINTER :: uDF (:,:,:,:)
+    
+    INTEGER       :: iX_B0(3), iX_E0(3), iX_B1(3), iX_E1(3)
+    INTEGER       :: iX1
+
     BA = pBA
     DM = pDM
 
@@ -466,6 +514,35 @@ CONTAINS
     CALL FillPatch( iLevel, MF_uGF, MF_uGF, MF_uGF_tmp )
     CALL FillPatch( iLevel, MF_uGF, MF_uCF, MF_uCF_tmp )
     CALL FillPatch( iLevel, MF_uGF, MF_uDF, MF_uDF_tmp )
+    
+    CALL amrex_mfiter_build( MFI, MF_uGF_tmp, tiling = UseTiling )
+
+    DO WHILE( MFI % next() )
+
+        uGF => MF_uGF_tmp % DataPtr( MFI )
+        uCF => MF_uCF_tmp % DataPtr( MFI )
+        uDF => MF_uDF_tmp % DataPtr( MFI )
+
+
+        BX = MFI % tilebox()
+
+        iX_B0 = BX % lo
+        iX_E0 = BX % hi
+        iX_B1 = BX % lo - swX
+        iX_E1 = BX % hi + swX
+
+        DO iX1 = iX_B1(1), iX_E1(1)
+            IF ( iX1 == -1 ) THEN
+
+                uCF(iX1,iX_B1(2),iX_B1(3),1:nDOFX)  &
+                    = uCF(iX1+1,iX_B1(2),iX_B1(3),1:nDOFX)
+
+                uDF(iX1,iX_B1(2),iX_B1(3),1:nDOFX)  &
+                    = uDF(iX1+1,iX_B1(2),iX_B1(3),1:nDOFX)
+
+            end IF
+        END DO
+    END DO
 
     CALL ClearLevel( iLevel )
 

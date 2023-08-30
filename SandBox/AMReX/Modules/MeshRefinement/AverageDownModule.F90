@@ -13,8 +13,7 @@ MODULE AverageDownModule
     amrex_ref_ratio
 #if defined( THORNADO_USE_MESHREFINEMENT )
   USE amrex_multifabutil_module, ONLY: &
-    amrex_average_down_dg, &
-    amrex_average_down_cg
+    amrex_average_down_dg
 #endif
   USE amrex_parallel_module, ONLY: &
     amrex_parallel_communicator, &
@@ -143,14 +142,11 @@ CONTAINS
 
 #if defined( THORNADO_USE_MESHREFINEMENT )
 
-    CALL amrex_average_down_cg &
+
+    CALL amrex_average_down_dg &
            ( MF_uGF    (CoarseLevel+1), MF_uGF    (CoarseLevel), &
              amrex_geom(CoarseLevel+1), amrex_geom(CoarseLevel), &
              1, nComp, amrex_ref_ratio(CoarseLevel))
-!    CALL amrex_average_down_dg &
-!           ( MF_uGF    (CoarseLevel+1), MF_uGF    (CoarseLevel), &
-!             amrex_geom(CoarseLevel+1), amrex_geom(CoarseLevel), &
-!             1, nComp, amrex_ref_ratio(CoarseLevel))
 
 #endif
 

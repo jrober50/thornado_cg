@@ -321,19 +321,22 @@ CONTAINS
           END IF
 
         END IF
-!        print*,"Here"
-        DO iLevel = 0, 0 !
-          PRINT*,"Before regrid "
-          IF( iLevel .LT. nLevels-1 ) &
-            CALL amrex_regrid( iLevel, t_new(iLevel) )
-          PRINT*,"After regrid"
-        END DO
 
-        PRINT*,"Before Test",nLevels,amrex_get_numlevels()
+! NEW
+!        DO iLevel = 0, 0 !
+!          IF( iLevel .LT. nLevels-1 ) &
+!            CALL amrex_regrid( iLevel, t_new(iLevel) )
+!        END DO
+
+        CALL amrex_regrid( 0, t_new(0) )
+
+! NEW
         IF ( nLevels .NE. amrex_get_numlevels() ) THEN
             nLevels = amrex_get_numlevels()
             CALL UpdateGeometryFields_MF( MF_uGF )
         END IF
+        
+        
         ! --- nLevels <= nMaxLevels; entire arrays t_old(0:nMaxLevels-1) and
         !     t_new(0:nMaxLevels-1) must have valid data ---
         t_old = t_old(0)

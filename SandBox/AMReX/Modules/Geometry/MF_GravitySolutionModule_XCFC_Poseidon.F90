@@ -1885,7 +1885,7 @@ CONTAINS
     INTEGER  :: iLevel, iNX, iX1, iX2, iX3, iNX1, iNX2
     INTEGER  :: iX_B0(3), iX_E0(3), iX_B1(3), iX_E1(3)
     REAL(DP) :: X1, X2, Psi, h1, h2, h3
-    print*,"nLevels----------------",nLevels
+
     DO iLevel = 0, nLevels-1
 
       CALL amrex_mfiter_build( MFI, MF_uGF(iLevel), tiling = UseTiling )
@@ -1961,7 +1961,7 @@ CONTAINS
     INTEGER  :: iLevel, iNX, iX1, iX2, iX3, iNX1, iNX2
     INTEGER  :: iX_B0(3), iX_E0(3), iX_B1(3), iX_E1(3)
     REAL(DP) :: X1, X2, Psi, h1, h2, h3
-    print*,"nLevels----------------",nLevels
+
     DO iLevel = 0, nLevels-1
 
       CALL amrex_mfiter_build( MFI, MF_uGF(iLevel), tiling = UseTiling )

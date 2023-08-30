@@ -18,8 +18,7 @@ MODULE FillPatchModule
     amrex_ref_ratio
 #if defined( THORNADO_USE_MESHREFINEMENT )
   USE amrex_amr_module, ONLY: &
-    amrex_interp_dg, &
-    amrex_interp_cg
+    amrex_interp_dg
 #endif
   USE amrex_fillpatch_module, ONLY: &
     amrex_fillpatch, &
@@ -123,8 +122,7 @@ CONTAINS
 
     END IF
 
-    CALL FillPatch_Scalar( FineLevel, MF_uGF, MF_dst, amrex_interp_cg )
-!    CALL FillPatch_Scalar( FineLevel, MF_uGF, MF_dst, amrex_interp_dg )
+    CALL FillPatch_Scalar( FineLevel, MF_uGF, MF_dst, amrex_interp_dg )
 
     IF( FineLevel .GT. 0 )THEN
 
@@ -267,8 +265,7 @@ CONTAINS
 
     END IF
 
-    CALL FillPatch_Vector( FineLevel, MF_uGF, amrex_interp_cg )
-!    CALL FillPatch_Vector( FineLevel, MF_uGF, amrex_interp_dg )
+    CALL FillPatch_Vector( FineLevel, MF_uGF, amrex_interp_dg )
 
     IF( FineLevel .GT. 0 )THEN
 
@@ -397,8 +394,7 @@ CONTAINS
       CALL MultiplyWithMetric &
              ( FineLevel-1, MF_uGF, nF, +1, swXX_Option = swXX )
 
-    CALL FillCoarsePatch_Vector( FineLevel, MF_uGF, amrex_interp_cg )
-!    CALL FillCoarsePatch_Vector( FineLevel, MF_uGF, amrex_interp_dg )
+    CALL FillCoarsePatch_Vector( FineLevel, MF_uGF, amrex_interp_dg )
 
     IF( FineLevel .GT. 0 )THEN
 

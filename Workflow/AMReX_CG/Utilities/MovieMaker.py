@@ -9,6 +9,7 @@ plt.style.use( 'publication.sty' )
 
 import GlobalVariables.Settings as gvS
 import GlobalVariables.Units    as gvU
+from Utilities.RefinementBoundaryFinder import FindRefinementBoundaries
 
 #=============================================#
 #   Included Routines
@@ -101,10 +102,10 @@ def CreateMovie(FileNumberArray,    \
     for i in range(nDirs):
         if DataDirectory[i][-1] != '/': DataDirectory[i] += '/'
         
-    Data0, DataUnits, X1_C0, dX10, Time = fetchData_AMReX(-1,                 \
-                                                          FileNumberArray[-1],\
-                                                          DataDirectory[0],  \
-                                                          Field              )
+#    Data0, DataUnits, X1_C0, dX10, Time = fetchData_AMReX(-1,                 \
+#                                                          FileNumberArray[-1],\
+#                                                          DataDirectory[0],  \
+#                                                          Field              )
 
     Data0, DataUnits, X1_C0, dX10, Time = fetchData_AMReX(0,                 \
                                                           FileNumberArray[0],\
@@ -135,7 +136,7 @@ def CreateMovie(FileNumberArray,    \
     ax  = fig.add_subplot( 111 )
     
     
-    CreateFrame( ax, xL, xH, dX10 )
+    CreateFrame( ax, xL, xH, dX10, Field, DataUnits )
 
     anim = animation.FuncAnimation( fig,                                        \
                                     partial(UpdateFrame,                        \
@@ -176,25 +177,28 @@ def CreateMovie(FileNumberArray,    \
 #   CreateFrame                                 #
 #                                               #
  #=============================================#
-def CreateFrame( ax, xL, xH, dX10 ):
+def CreateFrame( ax, xL, xH, dX10, Field, DataUnits ):
 
     global time_text
+    global elem_text
     global Lines
     global RefLines
     global IC
     global mesh
 
 
-    time_text = ax.text( 0.1, 0.9, '', transform = ax.transAxes, fontsize = 13 )
+    time_text = ax.text( 0.1, 0.15, '', transform = ax.transAxes, fontsize = 13 )
+    elem_text = ax.text( 0.1, 0.1, '', transform = ax.transAxes, fontsize = 13 )
 
     Lines = ['None']*nDirs
     for i in range(nDirs):
         Lines[i], = ax.plot( [],[],                                         \
-                             color  = plt.cm.Set1(i),                       \
+                             color  = 'blue',                       \
+                             marker = '.',                                  \
                              label  = r'$u_{:}\left(t\right)$'.format(i),   \
                              zorder = 10 )
     
-        
+        #color  = plt.cm.Set1(i),                       \
     
     if gvS.PlotMesh:
         mesh,     = ax.plot( [],[] )
@@ -219,10 +223,10 @@ def CreateFrame( ax, xL, xH, dX10 ):
                                     color  = 'red', \
                                     scaley = False, \
                                     zorder = 0,     \
-                                    alpha  = 0.4    )
+                                    alpha  = 0.7    )
 
 
-    ApplyMovieSettings( ax, xL, xH, dX10 )
+    ApplyMovieSettings( ax, xL, xH, dX10, Field, DataUnits )
 
     return
 
@@ -240,6 +244,7 @@ def InitializeFrame(FileNumberArray, DataDirectory, Field, Action):
 
     
     global time_text
+    global elem_text
     global Lines
     global RefLines
     global IC
@@ -257,7 +262,11 @@ def InitializeFrame(FileNumberArray, DataDirectory, Field, Action):
     # Initialize time text.  Add to Return List
     time_text.set_text('')
     retlist +=  [ time_text ]
-    
+
+    # Initialize element number text.  Add to Return List
+    elem_text.set_text('')
+    retlist +=  [ elem_text ]
+
     
     # If requested, initialize mesh. Add to Return List
     if gvS.PlotMesh:
@@ -265,15 +274,6 @@ def InitializeFrame(FileNumberArray, DataDirectory, Field, Action):
         retlist += [ mesh ]
         
         
-    # If requested, initialize refinement lines. Add to Return List
-    if gvS.ShowRefinement:
-        bottom, top = plt.ylim()
-        for i in range(len(RefLines)):
-            RefLines[i].set_data ( (gvS.RefinementLocations[i],  \
-                                    gvS.RefinementLocations[i] ),\
-                                       (top, bottom) )
-            retlist +=  [RefLines[i]]
-
 
 
 
@@ -296,7 +296,17 @@ def InitializeFrame(FileNumberArray, DataDirectory, Field, Action):
             IC[i].set_data( X1_C0[i], Data0[i] )
             retlist += [ IC[i] ]
 
-    
+    # If requested, initialize refinement lines. Add to Return List
+    if gvS.ShowRefinement:
+        bottom, top = plt.ylim()
+        RefinementLocations = FindRefinementBoundaries( dX10[0] )
+        for i in range(len(RefinementLocations)):
+            RefLines[i].set_data ( (RefinementLocations[i],  \
+                                    RefinementLocations[i] ),\
+                                       (top, bottom) )
+            retlist +=  [RefLines[i]]
+
+
         
 
     return tuple(retlist)
@@ -312,6 +322,7 @@ def InitializeFrame(FileNumberArray, DataDirectory, Field, Action):
 def UpdateFrame( t, FileNumberArray, DataDirectory, Field, Action):
 
     global time_text
+    global elem_text
     global Lines
     global RefLines
     global IC
@@ -351,7 +362,10 @@ def UpdateFrame( t, FileNumberArray, DataDirectory, Field, Action):
                         .format( Time[0], gvU.TimeUnits ) )
     retlist += [ time_text ]
 
-
+    # Create new element number text.
+    elem_text.set_text( r'$Elements: {:}$' \
+                        .format( len(X1_C[0] ) ) )
+    retlist += [ elem_text ]
 
 
     # If requested and amr is true, recreate mesh lines.
@@ -366,9 +380,10 @@ def UpdateFrame( t, FileNumberArray, DataDirectory, Field, Action):
     # If requested and amr is true, recreate refinement lines.
     if (gvS.ShowRefinement and gvS.amr):
         bottom, top = plt.ylim()
-        for i in range(len(RefLines)):
-            RefLines[i].set_data ( (gvS.RefinementLocations[i],  \
-                                    gvS.RefinementLocations[i] ),\
+        RefinementLocations = FindRefinementBoundaries( dX1[0] )
+        for i in range(len(RefinementLocations)):
+            RefLines[i].set_data ( (RefinementLocations[i],  \
+                                    RefinementLocations[i] ),\
                                     (top, bottom) )
         retlist += [RefLines[i]]
 
@@ -385,8 +400,8 @@ def UpdateFrame( t, FileNumberArray, DataDirectory, Field, Action):
  #=============================================#
 def fetchData_AMReX(t, FileNumberArray, DataDirectory, Field ):
 
-    print(FileNumberArray)
-    print(FileNumberArray[t])
+#    print(FileNumberArray)
+#    print(FileNumberArray[t])
     FileDirectory = DataDirectory + str(FileNumberArray[t]) + '/'
 
     TimeFile = FileDirectory + '{:}.dat'.format( 'Time' )
@@ -465,14 +480,23 @@ def ReadHeader( DataFile ):
 #   ApplyMovieSettings                          #
 #                                               #
  #=============================================#
-def ApplyMovieSettings( ax, xL, xH, dX10 ):
+def ApplyMovieSettings( ax, xL, xH, dX10, Field, DataUnits ):
 
 #    global IC
 #    global mesh
     
+    ax.set_title( r'$\texttt{{{:}}}$'.format( gvS.FigTitle ) + ' - AMR', fontsize = 15 )
+    
+    ax.set_xlabel \
+    ( r'$x^{{1}}\ \left[\mathrm{{{:}}}\right]$'.format( gvU.X1Units ), fontsize = 15 )
+
+
+    ax.set_ylabel( Field  + ' ' + r'$\left[\mathrm{{{:}}}\right]$' \
+                              .format( DataUnits[2:-2] ) )
     
     ax.legend( prop = {'size':12} )
     ax.grid(which='both')
+
 
     ax.set_xlim( xL, xH )
     ax.set_ylim( gvS.vmin, gvS.vmax )
@@ -483,7 +507,7 @@ def ApplyMovieSettings( ax, xL, xH, dX10 ):
     if gvS.UseLogScale_Y: ax.set_yscale( 'log' )
     
     if gvS.UseLogScale_X:
-        xL = max( xL, xL + 0.25 * dX10[0] )
+        xL = max( xL, xL + 0.25 * dX10[0]/9 )
         ax.set_xlim( xL, xH )
         ax.set_xscale( 'log' )
 

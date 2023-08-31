@@ -95,7 +95,7 @@ def MakeProbelmDataDirectory( FileNumberArray,          \
 
     
 
-    nProc = 2 #max( 1, cpu_count() // 2 )
+    nProc = 1 #max( 1, cpu_count() // 2 )
 
     if overwriteD:
     
@@ -172,9 +172,7 @@ def MakeDataFrameDirectories( FileNumberArray,          \
                               SaveX            = True,  \
                               SavedX           = True   ):
 
-
     nFiles = FileNumberArray.shape[0]
-
 
     if nProcs > 1:
         processes = []
@@ -280,8 +278,8 @@ def MakeDataFrameDirectoriesLoop( FileNumberArray,  \
 
     
 
-    NumPltFiles = FileNumberArray.shape[0]
-    
+#    NumPltFiles = FileNumberArray.shape[0]
+    NumPltFiles = len(FileNumberArray)
     
     for i in range(NumPltFiles):
 

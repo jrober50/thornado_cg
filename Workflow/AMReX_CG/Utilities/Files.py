@@ -51,8 +51,8 @@ def GetFileNumberArray( PlotDirectory,      \
     fileNumbers = np.array( fileList )
     numNumbers = fileNumbers.shape[0]
 
-    print( fileNumbers )
-    print( numNumbers )
+#    print( fileNumbers )
+#    print( numNumbers )
     
     
     # Warn if list is empty.
@@ -77,7 +77,7 @@ def GetFileNumberArray( PlotDirectory,      \
     if SSi < 0: SSi = 0
     if SSf < 0: SSf = int(fileNumbers[-1])
     
-    print(SSi,SSf)
+#    print(SSi,SSf)
     
     if SSf < SSi:
         msg = '\n>>> Final frame comes before initial frame. \n'
@@ -87,7 +87,7 @@ def GetFileNumberArray( PlotDirectory,      \
 
 
     for SSi_index in range( numNumbers ):
-        print( fileNumbers[SSi_index] )
+#        print( fileNumbers[SSi_index] )
         if ( fileNumbers[SSi_index] == SSi ): break
     
     for SSf_index in range( numNumbers-1, SSi_index-2,-1):
@@ -119,7 +119,6 @@ def GetFileNumberArray( PlotDirectory,      \
     
     # Filer file number list by PlotEvery value.
     fileNumbersFiltered = np.array( fileNumbersLimited[::PlotEvery] )
-
 
     return fileNumbersFiltered
 # END GetFileNumberArray
